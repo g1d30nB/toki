@@ -48,7 +48,7 @@ toki setup
 8. Pairs with the Claude desktop app.
 9. Introduces your scrapbook.
 
-> Until the tap ships ready-made packages, Homebrew may ask for Apple's Command Line Tools to install Toki. That's Homebrew, not Toki; it goes away once bottles are published.
+> On an Apple Silicon Mac with macOS 15 or later, Homebrew installs a ready-made package. On macOS 14 or an Intel Mac it builds Toki from source and first asks for Apple's Command Line Tools (`xcode-select --install`): that's Homebrew, not Toki, and it's a one-off.
 
 ## Day to day
 
