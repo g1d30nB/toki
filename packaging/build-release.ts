@@ -13,6 +13,7 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -40,7 +41,20 @@ const versionH = join(ROOT, "firmware", "toki", "version.h");
 const stamped = readFileSync(versionH, "utf8").replace(/#define TOKI_VERSION "[^"]*"/, `#define TOKI_VERSION "${VERSION}"`);
 writeFileSync(versionH, stamped);
 const fwBuild = join(WORK, "firmware-build");
-sh("arduino-cli", ["compile", "firmware/toki", "--build-path", fwBuild, "--build-property", "compiler.cpp.extra_flags=-DTOKI_NO_SECRETS"]);
+// Source paths are compiled into the firmware (assert messages); rewrite this Mac's
+// home folder to "~" so the release says nothing about who built it.
+const home = homedir();
+const mapHome = `-ffile-prefix-map=${home}=~`;
+sh("arduino-cli", [
+  "compile",
+  "firmware/toki",
+  "--build-path",
+  fwBuild,
+  "--build-property",
+  `compiler.cpp.extra_flags=-DTOKI_NO_SECRETS ${mapHome}`,
+  "--build-property",
+  `compiler.c.extra_flags=${mapHome}`,
+]);
 const fwOut = join(STAGE, "firmware", "bin");
 mkdirSync(fwOut, { recursive: true });
 for (const f of ["toki.ino.bin", "toki.ino.bootloader.bin", "toki.ino.partitions.bin", "boot_app0.bin"]) cpSync(join(fwBuild, f), join(fwOut, f));
@@ -53,6 +67,10 @@ if (existsSync(secretsH)) {
   }
   console.log("  checked: nothing from secrets.h is in the firmware");
 }
+for (const f of ["toki.ino.bin", "toki.ino.bootloader.bin"]) {
+  if (readFileSync(join(fwOut, f)).includes(Buffer.from(home))) throw new Error(`This Mac's home folder (${home}) is in ${f}. Stopping: nothing was released.`);
+}
+console.log("  checked: no path from this Mac is in the firmware");
 
 step("The bridge, the scrapbook and the tools");
 const copy = (from: string, filter?: (src: string) => boolean) => cpSync(join(ROOT, from), join(STAGE, from), { recursive: true, filter });
