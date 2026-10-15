@@ -9,7 +9,6 @@ class Toki < Formula
   desc "Desk robot that shows what your Claude agents are doing"
   homepage "https://github.com/g1d30nB/toki"
   url "{{URL}}"
-  version "{{VERSION}}"
   sha256 "{{SHA256}}"
   license "MIT" # the code; the art is all rights reserved (art/LICENSE)
 
