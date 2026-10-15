@@ -1,0 +1,199 @@
+/* The scrapbook's look (Gideon, 15 Oct: playful and colourful, in line with the
+   stickers, not a data dashboard). The page is a cutting mat (the lead sticker
+   sheet was photographed on one); each day is a cream paper card with a navy
+   outline and a hard shadow, the same language as the stickers' die-cut and navy
+   edge. Toki's palette throughout; periwinkle comes from the lead sheet (chosen
+   over teal and cream mats, 15 Oct). Words in Baloo 2 (the robot's typeface) and a
+   plain sans for longer text; sentence case. */
+
+:root {
+  --tk-ink: #1d2b53; /* navy: outlines, shadows, text */
+  --tk-paper: #fbf4e4; /* the day's page */
+  --tk-cream: #f6ecd6;
+  --tk-tomato: #e4572e;
+  --tk-mustard: #f2b134;
+  --tk-teal: #2a9d8f;
+  --tk-lavender: #c9caf6;
+  --tk-muted: #5b6b8c;
+  --tk-display: "Baloo 2", ui-rounded, system-ui, sans-serif;
+  --tk-text: system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --tk-mat: #7376e6; /* periwinkle */
+  --tk-grid: rgb(255 255 255 / 0.16);
+  --tk-grid-major: rgb(255 255 255 / 0.3);
+  --tk-on-mat: var(--tk-ink);
+}
+
+body.tk {
+  margin: 0;
+  color: var(--tk-ink);
+  font-family: var(--tk-text);
+  /* A cutting mat: a fine grid, a stronger line every five squares. */
+  background:
+    linear-gradient(var(--tk-grid-major) 1.5px, transparent 1.5px) 0 0 / 120px 120px,
+    linear-gradient(90deg, var(--tk-grid-major) 1.5px, transparent 1.5px) 0 0 / 120px 120px,
+    linear-gradient(var(--tk-grid) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(90deg, var(--tk-grid) 1px, transparent 1px) 0 0 / 24px 24px,
+    var(--tk-mat);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+.tk-display {
+  font-family: var(--tk-display);
+  letter-spacing: -0.01em;
+}
+
+/* A sheet of paper: cream, navy outline, hard offset shadow (no blur). */
+.tk-card {
+  background: var(--tk-paper);
+  border: 2.5px solid var(--tk-ink);
+  border-radius: 18px;
+  box-shadow: 5px 5px 0 var(--tk-ink);
+}
+.tk-card-sm {
+  background: var(--tk-paper);
+  border: 2px solid var(--tk-ink);
+  border-radius: 14px;
+  box-shadow: 3px 3px 0 var(--tk-ink);
+}
+
+/* A chunky pill button that presses in. */
+.tk-pill {
+  font-family: var(--tk-display);
+  font-weight: 700;
+  border: 2px solid var(--tk-ink);
+  border-radius: 999px;
+  background: var(--tk-tomato);
+  color: var(--tk-paper);
+  box-shadow: 3px 3px 0 var(--tk-ink);
+  padding: 4px 16px 2px;
+  transition: transform 80ms, box-shadow 80ms;
+}
+.tk-pill:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--tk-ink);
+}
+.tk-pill:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--tk-ink);
+}
+.tk-pill.quiet {
+  background: var(--tk-paper);
+  color: var(--tk-ink);
+}
+
+/* A small flat tag, "● Code 23": square-ish corners and no outline, so it reads
+   as a label, never as a button (Gideon, 15 Oct). Only pills are pressable. */
+.tk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--tk-display);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+  padding: 5px 8px 3px;
+  border-radius: 5px;
+  background: rgb(29 43 83 / 0.07);
+  color: var(--tk-ink);
+  white-space: nowrap;
+}
+
+/* The day's numbers as a scorecard: a big number over a small word. */
+.tk-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 0;
+}
+.tk-stat {
+  padding: 0 20px 0 0;
+  margin-right: 20px;
+  border-right: 2px dashed rgb(29 43 83 / 0.18);
+}
+.tk-stat:last-child {
+  border-right: 0;
+}
+.tk-stat .n {
+  font-family: var(--tk-display);
+  font-weight: 800;
+  font-size: 30px;
+  line-height: 1;
+}
+.tk-stat .w {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--tk-muted);
+  margin-top: 2px;
+}
+.tk-stat .w i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+.tk-chip .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  margin-top: -2px;
+  flex-shrink: 0;
+}
+.tk-chip .n {
+  color: var(--tk-muted);
+  font-weight: 500;
+}
+
+/* The zoom switch: a paper bar, the chosen segment inked in. */
+.tk-seg {
+  display: flex;
+  padding: 3px;
+  gap: 2px;
+  background: var(--tk-paper);
+  border: 2px solid var(--tk-ink);
+  border-radius: 999px;
+  box-shadow: 3px 3px 0 var(--tk-ink);
+}
+.tk-seg button {
+  flex: 1;
+  font-family: var(--tk-display);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 5px 12px 3px;
+  border-radius: 999px;
+  color: var(--tk-ink);
+}
+.tk-seg button[aria-pressed="true"] {
+  background: var(--tk-ink);
+  color: var(--tk-paper);
+}
+.tk-seg button:not([aria-pressed="true"]):hover {
+  background: var(--tk-cream);
+}
+
+/* An hour, ruled like a notebook page; its time on a little tag. */
+.tk-hour-tag {
+  display: inline-block;
+  font-family: var(--tk-display);
+  font-weight: 700;
+  font-size: 15px;
+  padding: 3px 9px 1px;
+  border: 1.5px solid var(--tk-ink);
+  border-radius: 8px;
+  background: var(--tk-mustard);
+  color: var(--tk-ink);
+  transform: rotate(-3deg);
+}
+
+/* Page titles: the paper's cream, flat, with a thin navy outline (Gideon, 15 Oct:
+   tomato and teal were both hard to read on the grid; no shadow). */
+.tk-title {
+  font-family: var(--tk-display);
+  font-weight: 800;
+  line-height: 0.95;
+  color: var(--tk-paper);
+  -webkit-text-stroke: 2px var(--tk-ink);
+  paint-order: stroke fill;
+  letter-spacing: 0.005em;
+}

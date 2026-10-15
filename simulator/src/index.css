@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+/* Toki's typeface (Gideon, 15 Oct): Baloo 2, SIL Open Font License (src/fonts/OFL.txt). */
+@font-face {
+  font-family: "Baloo 2";
+  src: url("./fonts/Baloo2-Variable.ttf") format("truetype");
+  font-weight: 400 800;
+  font-display: block;
+}
+
+@theme {
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+/* Metallic and holo stickers (spec §9.5; scrapbook/Foil.tsx). The sheen and glare
+   are cut to the sticker's own shape (its image as a mask), and the light follows
+   the pointer through --mx/--my. Metal greys or golds the sticker underneath, so
+   the foil carries the colour, as spot foil does in print. */
+.foil {
+  --mx: 32%;
+  --my: 28%;
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+}
+.foil-sheen,
+.foil-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  -webkit-mask-image: var(--mask, none);
+  mask-image: var(--mask, none);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+.foil-silver .foil-sheen {
+  background:
+    linear-gradient(115deg, transparent calc(var(--mx) - 28%), rgb(255 255 255 / 0.95) var(--mx), transparent calc(var(--mx) + 28%)),
+    repeating-linear-gradient(100deg, #f5f8fc 0 6%, #8e99a8 13%, #f5f8fc 20%);
+  mix-blend-mode: overlay;
+  opacity: 0.8;
+}
+.foil-gold .foil-sheen {
+  background:
+    linear-gradient(115deg, transparent calc(var(--mx) - 28%), rgb(255 246 214 / 0.95) var(--mx), transparent calc(var(--mx) + 28%)),
+    repeating-linear-gradient(100deg, #fff1b8 0 6%, #b07a12 13%, #fff1b8 20%);
+  mix-blend-mode: overlay;
+  opacity: 0.85;
+}
+.foil-holo .foil-sheen {
+  background: linear-gradient(115deg, #ff5d5d, #ffcf3d, #5dff8f, #4fd1ff, #a46bff, #ff5dc8, #ff5d5d, #ffcf3d, #5dff8f);
+  background-size: 300% 300%;
+  background-position: var(--mx) var(--my);
+  mix-blend-mode: color-dodge;
+  opacity: 0.55;
+}
+.foil-glare {
+  background: radial-gradient(circle at var(--mx) var(--my), rgb(255 255 255 / 0.7), transparent 42%);
+  mix-blend-mode: overlay;
+}

@@ -1,0 +1,53 @@
+# --- Never commit: private device data ---
+# Factory flash dump. Contains the Wi-Fi password and pairing data.
+firmware/stock-backup/
+*.bin
+*.sha256
+
+# Personal data: event log, recorded Buddy streams, photos, haiku.
+# The bridge keeps it in ~/StackChanData; these catch local copies.
+data/
+StackChanData/
+recordings/
+*.log
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# --- Not ours to publish ---
+# Visual references are other people's artwork; the desk photo is personal.
+docs/refs/
+# Early UIFlow experiments.
+UIFLow-files/
+
+# --- Build output and tooling ---
+.pio/
+build/
+node_modules/
+__pycache__/
+.venv/
+.vscode/
+.claude/settings.local.json
+
+# macOS
+.DS_Store
+
+# Working notes: kept on the Mac, never published
+notes/
+/CLAUDE.md
+docs/claude-code-kickoff.md
+# An early placeholder (the scrapbook lives in simulator/), and the owner's
+# separate website page
+/scrapbook/
+/Webpage/
+
+# Wi-Fi and bridge secrets for the firmware (copy secrets.example.h)
+firmware/**/secrets.h
+
+# Release builds (packaging/build-release.ts). toki.rb is generated from
+# toki.rb.template; until there's a public release URL it points at this Mac.
+packaging/.build/
+packaging/dist/
+packaging/homebrew/toki.rb

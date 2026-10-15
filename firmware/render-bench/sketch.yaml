@@ -1,0 +1,2 @@
+default_fqbn: esp32:esp32:m5stack_cores3:PartitionScheme=huge_app
+default_port: /dev/cu.usbmodem1401

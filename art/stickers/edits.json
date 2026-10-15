@@ -1,0 +1,180 @@
+{
+  "_about": "Human selection and edits to the generated stickers (spec 9.7). Every master in art/stickers/ was chosen by Gideon from several Recraft V4.1 SVG variations, then cleaned by art/tools/clean-sticker.mjs (palette, solid die-cut border). The originals, with their content credentials, are in art/stickers/raw/. Edits below were applied with art/tools/edit-sticker.mjs before cleaning.",
+  "picked": {
+    "hello-world": "round 1, hello-1",
+    "your-turn": "round 1, your-turn-3",
+    "context-full": "round 1, context-full-2",
+    "shipped": "round 1, shipped-1",
+    "oops": "round 2, oops-2",
+    "leave-me-alone": "round 2, leave-me-alone-1",
+    "zzz": "round 2, zzz-2",
+    "yolo-mode": "round 2, yolo-mode-2",
+    "plan-mode": "round 2, plan-mode-2",
+    "subagents": "round 2, subagents-2",
+    "always": "round 2, always-2"
+  },
+  "edited": {
+    "closed": {
+      "from": "round 2, closed-1",
+      "why": "Gideon: no need for the small CLOSED sign above the main lettering",
+      "ops": [
+        {
+          "remove": [
+            740,
+            215,
+            1290,
+            665
+          ]
+        },
+        {
+          "patch": [
+            [
+              780,
+              434,
+              1300,
+              476
+            ],
+            [
+              780,
+              478,
+              1300,
+              483
+            ],
+            [
+              780,
+              485,
+              1300,
+              530
+            ],
+            [
+              780,
+              532,
+              1300,
+              538
+            ],
+            [
+              780,
+              539,
+              1300,
+              584
+            ],
+            [
+              780,
+              586,
+              1300,
+              592
+            ],
+            [
+              780,
+              594,
+              1300,
+              639
+            ],
+            [
+              560,
+              326,
+              1480,
+              410
+            ]
+          ],
+          "to": "#5b6b8c",
+          "after": 0
+        },
+        {
+          "recolour": [
+            0,
+            0,
+            2048,
+            1509
+          ],
+          "to": "#5b6b8c",
+          "match": "#403f69",
+          "tolerance": 12
+        }
+      ],
+      "note": "the sign removed; the shutter slats and roller bar it covered redrawn in the shutter's colour; the slats and bar recoloured slate so the shutter reads against its navy backing"
+    },
+    "nope": {
+      "from": "round 2, nope-2",
+      "why": "Gideon: the legs don't need to show under the word",
+      "ops": [
+        {
+          "remove": [
+            680,
+            960,
+            1400,
+            1340
+          ]
+        },
+        {
+          "cut": [
+            660,
+            1095,
+            1430,
+            1380
+          ]
+        }
+      ],
+      "note": "the legs removed; the outline trimmed and rejoined along the letters"
+    },
+    "question": {
+      "from": "round 2, question-2",
+      "why": "Gideon: red sparkles, and no kawaii face in the middle",
+      "ops": [
+        {
+          "remove": [
+            790,
+            640,
+            1280,
+            800
+          ]
+        },
+        {
+          "recolour": [
+            760,
+            500,
+            1290,
+            930
+          ],
+          "to": "#e4572e",
+          "match": "#eee1cd"
+        },
+        {
+          "recolour": [
+            440,
+            880,
+            670,
+            1140
+          ],
+          "to": "#e4572e",
+          "match": "#1ba5ad"
+        },
+        {
+          "recolour": [
+            1410,
+            1350,
+            1590,
+            1560
+          ],
+          "to": "#e4572e",
+          "match": "#eee1cd"
+        }
+      ],
+      "note": "eyes, blush and mouth removed; the face merged into the red; both sparkles tomato"
+    }
+  },
+  "handEdited": {
+    "question": {
+      "by": "Gideon",
+      "in": "Affinity Designer",
+      "on": "2026-10-04",
+      "note": "tidied by hand and re-exported over the master. This file is now the source of truth: never regenerate it from raw/."
+    },
+    "nope": {
+      "by": "Gideon",
+      "in": "Affinity Designer",
+      "on": "2026-10-04",
+      "note": "tidied by hand and re-exported over the master. This file is now the source of truth: never regenerate it from raw/."
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  // Typecheck only: Node 24 runs the .ts files directly by stripping the types,
+  // so every file must use erasable syntax (no enums, no parameter properties).
+  "compilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "target": "es2023",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "skipLibCheck": true,
+    "typeRoots": ["../simulator/node_modules/@types"],
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"]
+}
