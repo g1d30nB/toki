@@ -34,7 +34,7 @@ class Toki < Formula
     (bin/"toki").write <<~SH
       #!/bin/bash
       export TOKI_HOME="#{opt_libexec}"
-      export TOKI_NODE="#{Formula["node@24"].opt_bin}/node"
+      export TOKI_NODE="#{formula_opt_bin("node@24")}/node"
       export TOKI_PYTHON="#{opt_libexec}/venv/bin/python"
       exec "$TOKI_NODE" "$TOKI_HOME/bridge/src/cli.ts" "$@"
     SH
