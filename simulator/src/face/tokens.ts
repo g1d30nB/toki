@@ -24,6 +24,7 @@ export type FaceTokens = {
   cheekX: number; // cheek centre, outwards from the eye's centre
   cheekY: number; // and down from it
   browCurve: number; // how arched the brows are: 0 straight, 0.5 a half-moon
+  browThick: number; // a brow is a crescent: this thick in the middle, tapering to points
   lashLen: number; // the three lashes on lashed closed eyes
 
   smileCurve: number; // radius of the smiling lower lid, in eye widths: smaller is a rounder curve
@@ -154,11 +155,12 @@ export const defaultTokens: FaceTokens = {
   shineBig: 0.34,
   shineSmall: 0.15,
   lookTravel: 7,
-  cheekRx: 19,
+  cheekRx: 15.5,
   cheekRy: 12,
-  cheekX: 24,
-  cheekY: 48,
-  browCurve: 0.32,
+  cheekX: 31,
+  cheekY: 54,
+  browCurve: 0.42,
+  browThick: 6,
   lashLen: 9,
 
   smileCurve: 2.4,
@@ -291,6 +293,7 @@ export const tokenRanges: Partial<Record<keyof FaceTokens, [number, number, numb
   cheekX: [-10, 50, 1],
   cheekY: [10, 70, 1],
   browCurve: [0, 0.6, 0.02],
+  browThick: [1, 12, 0.5],
   lashLen: [0, 16, 0.5],
   smileCurve: [0.8, 4, 0.1],
   manpuScale: [0.5, 2, 0.05],

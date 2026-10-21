@@ -209,8 +209,9 @@ function chevronEye(g: Gfx, e: Eye, tk: FaceTokens) {
 }
 
 /**
- * Brows: a small arch above each eye, thin like the rest. Angle lifts the inner
- * ends; tilt raises the right brow only; curve 0 makes a straight stroke (cross).
+ * Brows: a small filled crescent above each eye, thick in the middle and tapering
+ * to points (Gideon, 21 Oct). Angle lifts the inner ends; tilt raises the right
+ * brow only; curve 0 makes a straight, tapered stroke (cross).
  */
 function brow(g: Gfx, e: Eye, f: AnimatedFace, tk: FaceTokens) {
   const half = (tk.browLength * (f.brows.len ?? 1)) / 2;
@@ -218,15 +219,19 @@ function brow(g: Gfx, e: Eye, f: AnimatedFace, tk: FaceTokens) {
   const a = ((f.brows.angle + (e.side === 1 ? f.brows.tilt : 0)) * Math.PI) / 180;
   const y = e.cy - e.ry - tk.browGap - f.brows.y;
   const sag = (f.brows.curve ?? tk.browCurve) * half; // how far the middle rises above the ends
-  const pts: [number, number][] = [];
-  for (let i = 0; i <= 12; i++) {
-    const u = -1 + (2 * i) / 12; // -1 inner end .. 1 outer end
+  const top: [number, number][] = [];
+  const bottom: [number, number][] = [];
+  const at = (lx: number, ly: number): [number, number] => [e.cx + e.side * lx * Math.cos(a), y + ly + lx * Math.sin(a)];
+  for (let i = 0; i <= 16; i++) {
+    const u = -1 + (2 * i) / 16; // -1 inner end .. 1 outer end
     const lx = u * half;
-    const ly = -sag * (1 - u * u);
-    // Tilted so the inner end (u = -1) lifts by the angle.
-    pts.push([e.cx + e.side * lx * Math.cos(a), y + ly + lx * Math.sin(a)]);
+    const mid = -sag * (1 - u * u);
+    // Thickest in the middle, tapering to points: a crescent moon.
+    const t = (tk.browThick / 2) * Math.pow(1 - u * u, 0.7) + 0.6;
+    top.push(at(lx, mid - t));
+    bottom.push(at(lx, mid + t));
   }
-  polyline(g, pts, tk.browWeight, palette.line);
+  g.fillPolygon([...top, ...bottom.reverse()], palette.line);
 }
 
 /** Where the eyes are this frame: manpu and the mouth position themselves from these. */
