@@ -1,5 +1,5 @@
 import { renderCell } from "../dev/capture";
-import type { ExpressionId } from "../face/expressions";
+import { expressionIds, type ExpressionId } from "../face/expressions";
 import { mix, palette } from "../face/palette";
 import type { Moment, MomentKind } from "../state/moments";
 // The real stickers (art/: all rights reserved, see art/LICENSE).
@@ -190,12 +190,13 @@ const BORDER = 13;
  * Three kinds of round face sticker (Gideon's references, 21 Oct), so a page of them
  * feels varied; each face always gets the same kind:
  * - soft: a strong shadow crescent down the right, a curved gloss streak (the crown)
- * - rim: a second navy line inside the lower right, a lighter band behind it (a disc)
+ * - rim: a second navy line round the lower edge, meeting the outline, a pale band below (a disc)
  * - bubble: a clean body with two round gloss dots, big and small
  */
 type RoundKind = "soft" | "rim" | "bubble";
 const ROUND_KINDS: RoundKind[] = ["soft", "rim", "bubble"];
-const kindOfFace = (face: string): RoundKind => ROUND_KINDS[[...face].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % 3];
+// In turn down the list of faces, so each kind gets a third of them.
+const kindOfFace = (face: string): RoundKind => ROUND_KINDS[Math.max(0, expressionIds.indexOf(face as ExpressionId)) % 3];
 
 /** The face's features on a round cream body fitted round them. */
 function mochi(cut: HTMLCanvasElement, kind: RoundKind, border = true): { url: string; aspect: number; canvas: HTMLCanvasElement } {
@@ -247,13 +248,22 @@ function mochi(cut: HTMLCanvasElement, kind: RoundKind, border = true): { url: s
     g.stroke();
     dot(-0.3, -0.8, R * 0.035);
   } else if (kind === "rim") {
-    // A lighter band along the lower right, bounded by a second navy line.
-    disc(R, mix(palette.face, palette.water, 0.18));
-    disc(R * 0.9, palette.face, -R * 0.07, -R * 0.09);
+    // A disc seen a little from below (Gideon's reference): the face is a smaller
+    // circle set higher, and a second navy line runs round its lower edge from where
+    // it meets the outline on one side to where it meets it on the other, a pale
+    // band below it.
+    const r = R * 0.92;
+    const d = R * 0.12;
+    disc(R, mix(palette.face, palette.water, 0.24));
+    disc(r, palette.face, 0, -d);
+    // Where the two circles cross: y from the outer centre, then the angle on the inner one.
+    const y = (r * r - R * R - d * d) / (2 * d);
+    const a = Math.atan2(y + d, Math.sqrt(R * R - y * y));
     g.strokeStyle = palette.line;
-    g.lineWidth = OUTLINE * 0.7;
+    g.lineWidth = OUTLINE * 0.75;
+    g.lineCap = "round";
     g.beginPath();
-    g.arc(c - R * 0.07, c - R * 0.09, R * 0.9, Math.PI * -0.1, Math.PI * 0.85);
+    g.arc(c, c - d, r, a, Math.PI - a);
     g.stroke();
     dot(-0.5, -0.55, R * 0.09);
     dot(-0.3, -0.72, R * 0.045);
