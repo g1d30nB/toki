@@ -1,24 +1,26 @@
-# Toki (時)
+<h1 align="center"><img src="docs/images/banner.webp" width="100%" alt="Toki (時)"></h1>
 
 <p align="center">
-  <img src="docs/images/toki-faces.gif" width="420" alt="Toki's face on its screen, changing as Claude works: idle, reading, on the web, testing, with three subagents, waiting for your OK, approved, an error, a boop, done">
+  <img src="docs/images/toki-on-the-desk.webp" height="330" alt="Toki on a wooden desk: a small square robot with a cream screen showing a happy kawaii face, big shiny eyes and pink cheeks">
+  &nbsp;
+  <img src="docs/images/toki-faces.gif" width="428" alt="Toki's face on its screen, changing as Claude works: idle, reading, on the web, testing, with three subagents, waiting for your OK, approved, an error, a boop, done">
 </p>
-
-<p align="center"><b>A little desk robot that shows what Claude is up to, out of the corner of your eye.<br>And a sticker scrapbook of your days together.</b></p>
 
 Toki lives on an [M5Stack StackChan](https://docs.m5stack.com/en/StackChan) (the K151, built on a CoreS3) and keeps an eye on Claude Code and the Claude desktop app. Its face changes with whatever Claude is doing: reading, running a command, searching the web, sweating over your tests. When Claude needs your OK, Toki looks up at you, glows amber, and you answer with a tap on its face. You don't even have to look: idle, busy and waiting each read differently from the corner of your eye.
 
 *Toki* is Japanese for time, or a moment. It's also a pun on tokens.
 
-## Meet Toki
+<h2><img src="docs/images/heading-meet-toki.webp" height="84" alt="Meet Toki"></h2>
 
 <p align="center">
-  <img src="docs/images/toki-faces.png" width="760" alt="All 22 of Toki's faces, each named: idle, thinking, reading, searching, editing, running a command, testing, on the web, subagents, working, needs your OK, a question for you, done, something failed, you approved, you denied, boop, quiet mode, close the day, day closed, closed early, night">
+  <img src="docs/images/toki-faces.webp" width="760" alt="All 22 of Toki's faces, each named: idle, thinking, reading, searching, editing, running a command, testing, on the web, subagents, working, needs your OK, a question for you, done, something failed, you approved, you denied, boop, quiet mode, close the day, day closed, closed early, night">
 </p>
 
 Every face is drawn live, so it blinks, glances about and breathes, and every one is triggered by something real. Nothing on the screen is random.
 
-## What it does
+<h2><img src="docs/images/heading-what-it-does.webp" height="84" alt="What it does"></h2>
+
+<img src="docs/images/toki-thinking.webp" width="260" align="right" alt="A close-up of Toki thinking: round shiny eyes looking up, three dots between its brows, a small smile, and the word THINKING under its face">
 
 - **A face that follows Claude.** A kawaii face, drawn live on a cream screen: big shiny eyes, pink cheeks, a tongue when it concentrates. Each kind of work has its own expression and a small manga symbol: a magnifier for searching, a sweat drop for tests, "www" for the web, little faces for subagents. Under the face, a label says what Claude is working on (`READING · render.ts`), if you want it.
 - **Approvals on the robot.** Allow or Deny on the touchscreen; hold Allow for "Always allow" when Claude offers a rule. Questions stay in Claude, where you can read them.
@@ -26,10 +28,12 @@ Every face is drawn live, so it blinks, glances about and breathes, and every on
 - **Your day, closed.** Long-press the face at the end of the day and a shop shutter comes down over Toki. Tap to open it again.
 - **A scrapbook.** A sticker for everything you ask Claude, and more for the moments that matter. See below.
 
-## The scrapbook
+<br clear="right">
+
+<h2><img src="docs/images/heading-the-scrapbook.webp" height="84" alt="The scrapbook"></h2>
 
 <p align="center">
-  <img src="docs/images/toki-stickers.png" width="760" alt="A scrapbook page covered in Toki's stickers: SHIPPED!!, OOPS!!, HELLO WORLD, YOLO MODE, NOPE!, LEAVE ME ALONE!!, CONTEXT FULL!, PLAN MODE, YOUR TURN!!, ALWAYS and Zzz, each with Toki's face, plus round face stickers and little symbols for the web, searching, tests, commands and more">
+  <img src="docs/images/toki-stickers.webp" width="760" alt="A scrapbook page covered in Toki's stickers: SHIPPED!!, OOPS!!, HELLO WORLD, YOLO MODE, NOPE!, LEAVE ME ALONE!!, CONTEXT FULL!, PLAN MODE, YOUR TURN!!, ALWAYS and Zzz, each with Toki's face, plus round face stickers and little symbols for the web, searching, tests, commands and more">
 </p>
 
 A diary of your days with Claude, in stickers. It fills itself as you work. Each day is a notebook page: a sticker for every prompt, sized by how much work it took, and stickers of their own for the moments that matter (a push, an error, a long wait for your OK, the day you close). Zoom out to a month calendar, or the whole year as a quilt of Toki's faces. Your busiest days come out silver or gold, and rare moments holographic.
@@ -38,16 +42,16 @@ A diary of your days with Claude, in stickers. It fills itself as you work. Each
 - **Its own window:** in Safari, File, then Add to Dock (macOS 14 or later). In Chrome, the install icon in the address bar.
 - **Private:** it's served to your Mac only (127.0.0.1), from data in `~/StackChanData`. Nothing in it is ever uploaded, and nothing from it is ever published.
 
-## What you need
+<h2><img src="docs/images/heading-what-you-need.webp" height="84" alt="What you need"></h2>
 
-<img src="docs/images/stackchan.jpg" width="200" align="right" alt="The M5Stack StackChan: a small square screen on a two-servo neck and base">
+<img src="docs/images/stackchan.webp" width="200" align="right" alt="The M5Stack StackChan: a small square screen on a two-servo neck and base">
 
 - An **M5Stack StackChan K151** and its USB-C cable. It arrives with a plain face; Toki gives it a new one (and `toki restore` puts the old one back).
 - A **Mac** with [Homebrew](https://brew.sh).
 - The **Claude desktop app** (for Bluetooth, through its Hardware Buddy) and **Claude Code**.
 - **2.4 GHz Wi-Fi** that your Mac shares. The robot can't use 5 GHz.
 
-## Install
+<h2><img src="docs/images/heading-install.webp" height="84" alt="Install"></h2>
 
 ```bash
 brew install g1d30nB/toki/toki
@@ -97,10 +101,10 @@ Claude app ──────────── Bluetooth (Hardware Buddy) ─�
 - **The face is designed in a browser simulator first,** and the robot's face data is generated from it, so the two never drift apart.
 
 <p align="center">
-  <img src="docs/images/face-lab.png" width="640" alt="The face lab: Toki's idle face in the browser, beside buttons for every expression and the agent state">
+  <img src="docs/images/face-lab.webp" width="640" alt="The face lab: Toki's idle face in the browser, beside buttons for every expression and the agent state">
 </p>
 
-<img src="docs/images/first-face.jpg" width="220" align="right" alt="An early, dark blue version of Toki's face on the real robot, in front of a laptop running the simulator">
+<img src="docs/images/first-face.webp" width="220" align="right" alt="An early, dark blue version of Toki's face on the real robot, in front of a laptop running the simulator">
 
 **How it started.** The first face on the glass (3 October), beside the simulator it was designed in: dark blue, ringed amber eyes, a tiny smile. It went kawaii three weeks later, after four rounds of review on the robot itself.
 
