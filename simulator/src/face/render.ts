@@ -86,8 +86,8 @@ export class FaceRenderer {
     else if (this.label.text !== text && wallMs - this.label.at >= tk.labelHoldMs) this.label = { text, l, at: wallMs };
     const shown = this.label.l;
     const k = tk.labelInMs > 0 ? Math.min(1, (wallMs - this.label.at) / tk.labelInMs) : 1;
-    const cream = mix(palette.ground, palette.cream, k);
-    const soft = mix(palette.ground, mix(palette.cream, palette.ground, 0.3), k);
+    const cream = mix(palette.face, palette.line, k); // kawaii pass: navy on the cream screen
+    const soft = mix(palette.face, mix(palette.line, palette.face, 0.35), k);
     const size = 22; // Baloo 2 Bold / Medium 22 on the robot
     const gap = 10; // each side of the middle dot, as on the robot
     const wv = g.textWidth(shown.verb, size, false, true);
@@ -184,14 +184,12 @@ export class FaceRenderer {
     if (id === "closeAsk" && !lab.hideChrome) {
       // "Close the day?" (spec §3.4): the question, then two booth-style buttons
       // in the same places as Deny / Allow, so your thumb already knows them.
-      g.drawString("Close the day?", 160, tk.hintY, palette.cream, tk.hintSize, "top_center", true);
+      g.drawString("Close the day?", 160, tk.hintY, palette.line, tk.hintSize, "top_center", true);
       const mid = tk.buttonY + tk.buttonH / 2;
-      g.fillRoundRect(8, tk.buttonY, 148, tk.buttonH, tk.buttonH / 2, palette.cream);
-      g.fillRoundRect(11, tk.buttonY + 3, 142, tk.buttonH - 6, tk.buttonH / 2 - 3, palette.navy);
-      g.drawString("Not yet", 82, mid, palette.cream, 28, "middle_center", true);
-      g.fillRoundRect(164, tk.buttonY, 148, tk.buttonH, tk.buttonH / 2, palette.cream);
-      g.fillRoundRect(167, tk.buttonY + 3, 142, tk.buttonH - 6, tk.buttonH / 2 - 3, palette.mustard);
-      g.drawString("Close", 238, mid, palette.ink, 28, "middle_center", true);
+      pill(g, tk, 8, palette.face);
+      g.drawString("Not yet", 82, mid, palette.line, 28, "middle_center", true);
+      pill(g, tk, 164, palette.mustard);
+      g.drawString("Close", 238, mid, palette.line, 28, "middle_center", true);
     }
 
     if (id === "asked" && !lab.hideChrome) drawQuestionChrome(g, tk, lab.question ?? (s.prompt && !lab.expression ? s.prompt.question : undefined));
@@ -204,11 +202,11 @@ export class FaceRenderer {
         const tool = s.prompt && !lab.expression ? s.prompt.tool : "Bash";
         const hint = s.prompt && !lab.expression ? s.prompt.hint : "npm test";
         const label = `${tool.toUpperCase()} · ${hint}`;
-        g.drawString(fit(g, label, 296, tk.hintSize), 160, tk.hintY, palette.cream, tk.hintSize, "top_center", false, true);
+        g.drawString(fit(g, label, 296, tk.hintSize), 160, tk.hintY, palette.line, tk.hintSize, "top_center", false, true);
         const mid = tk.buttonY + tk.buttonH / 2;
-        g.fillRoundRect(8, tk.buttonY, 148, tk.buttonH, tk.buttonH / 2, palette.tomato);
+        pill(g, tk, 8, palette.tomato);
         g.drawString("Deny", 82, mid, palette.cream, 28, "middle_center", true);
-        g.fillRoundRect(164, tk.buttonY, 148, tk.buttonH, tk.buttonH / 2, palette.teal);
+        pill(g, tk, 164, palette.teal);
         // With Always allow on offer, Allow shifts left and a small ∞ says "hold for more".
         g.drawString("Allow", always ? 224 : 238, mid, palette.cream, 28, "middle_center", true);
         if (always) drawAlways(g, 282, mid, palette.cream);
@@ -270,13 +268,11 @@ function drawAlwaysChrome(g: Gfx, tk: FaceTokens, always: string) {
   const tail = cut > 0 ? always.slice(cut) : "";
   const head = cut > 0 ? always.slice(0, cut) : always;
   const text = fitBold(g, head, 296 - g.textWidth(tail, tk.hintSize, false, true), tk.hintSize) + tail;
-  g.drawString(text, 160, tk.hintY, palette.cream, tk.hintSize, "top_center", true);
+  g.drawString(text, 160, tk.hintY, palette.line, tk.hintSize, "top_center", true);
   const mid = tk.buttonY + tk.buttonH / 2;
-  g.fillRoundRect(8, tk.buttonY, 148, tk.buttonH, tk.buttonH / 2, palette.cream);
-  g.fillRoundRect(11, tk.buttonY + 3, 142, tk.buttonH - 6, tk.buttonH / 2 - 3, palette.navy);
-  g.drawString("Cancel", 82, mid, palette.cream, 28, "middle_center", true);
-  g.fillRoundRect(164, tk.buttonY, 148, tk.buttonH, tk.buttonH / 2, palette.cream);
-  g.fillRoundRect(167, tk.buttonY + 3, 142, tk.buttonH - 6, tk.buttonH / 2 - 3, palette.teal);
+  pill(g, tk, 8, palette.face);
+  g.drawString("Cancel", 82, mid, palette.line, 28, "middle_center", true);
+  pill(g, tk, 164, palette.teal);
   g.drawString("Always", 216, mid, palette.cream, 28, "middle_center", true); // the wider word: left, clear of its loop
   drawAlways(g, 284, mid, palette.cream);
 }
@@ -287,7 +283,7 @@ function drawAlwaysChrome(g: Gfx, tk: FaceTokens, always: string) {
  * text minimum holds). No buttons, and no question label (Gideon: not needed).
  */
 function drawQuestionChrome(g: Gfx, tk: FaceTokens, _q: Question | undefined) {
-  g.drawString("Question for you in Claude", 160, tk.buttonY + tk.buttonH / 2, palette.cream, fitSize(g, "Question for you in Claude", false), "middle_center", false);
+  g.drawString("Question for you in Claude", 160, tk.buttonY + tk.buttonH / 2, palette.line, fitSize(g, "Question for you in Claude", false), "middle_center", false);
 }
 
 /**
@@ -301,7 +297,7 @@ export function drawLinkLost(g: Gfx, tk: FaceTokens) {
   const x = tk.linkX;
   const y = tk.linkY;
   const r = Math.max(1.25, tk.linkH / 14);
-  const rune = mix(palette.cream, palette.ground, 0.3);
+  const rune = mix(palette.line, palette.face, 0.25);
   // The Bluetooth rune: a spine, and two chevrons crossing it.
   const pts: [number, number][] = [
     [x - w, y - h / 2],
@@ -359,4 +355,13 @@ function sampleObject(id: ExpressionId): string | undefined {
 /** As the robot's fitFont: 28 px if it fits the 296 px the screen allows, else 22. */
 export function fitSize(g: Gfx, s: string, bold: boolean): number {
   return g.textWidth(s, 28, false, bold) <= 296 ? 28 : 22;
+}
+
+/**
+ * A button where Deny / Allow sit: a pill with a navy outline, like the
+ * scrapbook's (kawaii pass). Left at x 8, right at x 164.
+ */
+function pill(g: Gfx, tk: FaceTokens, x: number, fill: string) {
+  g.fillRoundRect(x, tk.buttonY, 148, tk.buttonH, tk.buttonH / 2, palette.line);
+  g.fillRoundRect(x + 2.5, tk.buttonY + 2.5, 143, tk.buttonH - 5, tk.buttonH / 2 - 2.5, fill);
 }

@@ -93,13 +93,13 @@ function fit(g: Gfx, s: string, max: number, bold: boolean): number {
 export function drawSetupChrome(g: Gfx, s: SetupScreen) {
   const { title, line, command } = setupLines(s);
   if (s.screen === "pairCode") {
-    g.drawString(title, 160, 112, palette.cream, fit(g, title, 296, false), "top_center", false);
+    g.drawString(title, 160, 112, palette.line, fit(g, title, 296, false), "top_center", false);
     // On the robot: a digits-only cut of Baloo 2 Bold, 54 px.
-    g.drawString(s.code, 160, 196, palette.cream, 54, "middle_center", true);
+    g.drawString(s.code, 160, 196, palette.line, 54, "middle_center", true);
     return;
   }
-  g.drawString(title, 160, SETUP_TITLE_Y, palette.cream, fit(g, title, 296, true), "top_center", true);
-  const soft = mix(palette.cream, palette.ground, 0.25);
+  g.drawString(title, 160, SETUP_TITLE_Y, palette.line, fit(g, title, 296, true), "top_center", true);
+  const soft = mix(palette.line, palette.face, 0.3);
   if (line && command) {
     // Two pieces centred as one: the words, then the command in monospace.
     const gap = 8;
@@ -109,7 +109,7 @@ export function drawSetupChrome(g: Gfx, s: SetupScreen) {
     const wl = g.textWidth(line, px, false, false);
     const x0 = 160 - both(px) / 2;
     g.drawString(line, x0, SETUP_LINE_Y, soft, px, "top_left", false);
-    g.drawString(command, x0 + wl + gap, SETUP_LINE_Y, palette.cream, px, "top_left", true);
+    g.drawString(command, x0 + wl + gap, SETUP_LINE_Y, palette.line, px, "top_left", true);
   } else if (line) g.drawString(line, 160, SETUP_LINE_Y, soft, fit(g, line, 296, false), "top_center", false);
 }
 
@@ -121,10 +121,10 @@ export function drawSetupChrome(g: Gfx, s: SetupScreen) {
 export function drawWifi(g: Gfx, cx: number, cy: number, t: number, on: boolean, k: number) {
   if (k <= 0.05) return;
   const lit = on ? 3 : Math.floor(t / 420) % 4; // 0..3 arcs lit, then round again
-  const dim = mix(palette.cream, palette.ground, 0.7);
-  g.fillCircle(cx, cy, 3.2 * k, palette.cream);
+  const dim = mix(palette.line, palette.face, 0.75);
+  g.fillCircle(cx, cy, 3.2 * k, palette.line);
   for (let i = 0; i < 3; i++) {
     const r = (8 + i * 6.5) * k;
-    g.fillArc(cx, cy, r, r + 3.6 * k, 225, 315, i < lit ? palette.cream : dim);
+    g.fillArc(cx, cy, r, r + 3.6 * k, 225, 315, i < lit ? palette.line : dim);
   }
 }
