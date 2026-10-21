@@ -27,7 +27,7 @@ const FACES: { group: string; entries: Entry[] }[] = [
       { id: "think", name: "Thinking", means: "Claude is answering without tools." },
       { id: "read", name: "Reading", means: "Reading files: eyes sweep side to side." },
       { id: "search", name: "Searching", means: "Grep or glob: a magnifier, darting eyes." },
-      { id: "edit", name: "Editing", means: "Writing a file: tongue out, concentrating." },
+      { id: "edit", name: "Editing", means: "Writing a file: a smile, tongue out of one side." },
       { id: "run", name: "Running a command", means: "Eyes follow text scrolling up." },
       { id: "test", name: "Testing", means: "Tests running: worried mouth, a sweat drop." },
       { id: "web", name: "On the web", means: "Searching or fetching: the www wave." },
@@ -45,8 +45,8 @@ const FACES: { group: string; entries: Entry[] }[] = [
     group: "Moments",
     entries: [
       { id: "done", name: "Done", means: "A turn finished: happy arcs, three sparkles." },
-      { id: "error", name: "Something failed", means: "Spiral eyes, then > <. Held for 4 s." },
-      { id: "approved", name: "You approved", means: "Happy squint and a blush." },
+      { id: "error", name: "Something failed", means: "Spiral eyes, then cross. Held for 4 s." },
+      { id: "approved", name: "You approved", means: "Eyes squeezed shut, a big smile." },
       { id: "denied", name: "You denied", means: "“Oh, okay.” Then back to work." },
       { id: "boop", name: "Boop", means: "You tapped the face: a giggle.", atMs: 700 },
     ],
@@ -56,7 +56,7 @@ const FACES: { group: string; entries: Entry[] }[] = [
     entries: [
       { id: "quiet", name: "Quiet mode", means: "Double-tap: only approvals get through. Tap to wake." },
       { id: "closed", name: "Day closed", means: "Long-press, then Close: star eyes, then the shutter." },
-      { id: "sleepy", name: "Closed early", means: "A yawn; the shutter comes most of the way down." },
+      { id: "sleepy", name: "Closed early", means: "A big yawn, then drowsy as the shutter comes most of the way down." },
       { id: "night", name: "Night", means: "Asleep behind the shutter. Tap to reopen the day." },
       { id: "idle", name: "Link down", means: "Bluetooth with a red cross, top left: no link to the Claude app.", lab: { disconnected: true }, whole: true },
     ],
