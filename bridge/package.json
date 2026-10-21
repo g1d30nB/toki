@@ -1,6 +1,6 @@
 {
   "name": "toki-bridge",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "type": "module",
   "description": "Toki's bridge: Claude Code hooks in, Toki's state out. Runs on Node 24 with no dependencies (Node strips the TypeScript types itself).",
