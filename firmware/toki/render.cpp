@@ -187,10 +187,11 @@ void drawAlwaysChrome(M5Canvas& g, const char* always, const Tokens& tk) {
  * answer, in regular weight so it stays quiet (the spec's 20 px minimum holds).
  */
 void drawQuestionChrome(M5Canvas& g, const FaceInput&, const Tokens& tk) {
+  // Where the label sits on other faces, in the label's size (face review, 21 Oct).
   g.setTextColor(kLine);
-  g.setTextDatum(middle_center);
-  fitFont(g, "Question for you in Claude", false);
-  g.drawString("Question for you in Claude", 160, (int)(tk.buttonY + tk.buttonH / 2));
+  g.setTextDatum(top_center);
+  useFont(g, Baloo::Medium22);
+  g.drawString("Question for you in Claude", 160, (int)tk.labelY);
 }
 
 void drawApprovalChrome(M5Canvas& g, const FaceInput& in, const Tokens& tk) {

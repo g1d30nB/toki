@@ -282,9 +282,10 @@ function drawAlwaysChrome(g: Gfx, tk: FaceTokens, always: string) {
  * Asked (step 6; Gideon, 3 Oct): a question is answered in Claude, not on Toki.
  * Just where to answer, in regular weight so it stays quiet (the spec's 20 px
  * text minimum holds). No buttons, and no question label (Gideon: not needed).
+ * Where the label sits on other faces, in the label's size (face review, 21 Oct).
  */
 function drawQuestionChrome(g: Gfx, tk: FaceTokens, _q: Question | undefined) {
-  g.drawString("Question for you in Claude", 160, tk.buttonY + tk.buttonH / 2, palette.line, fitSize(g, "Question for you in Claude", false), "middle_center", false);
+  g.drawString("Question for you in Claude", 160, tk.labelY, palette.line, 22, "top_center", false);
 }
 
 /**
