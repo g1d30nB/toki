@@ -17,7 +17,8 @@ export type FaceTokens = {
   // pink cheeks on every face, small arched brows.
   lineWeight: number; // stroke radius of every line: closed eyes, lids, brows, lashes
   shineBig: number; // the big shine, top right: radius as a fraction of the eye
-  shineSmall: number; // the small shine, bottom left
+  shineMid: number; // the third shine, on the right: only while the eye is fully round
+  shineSmall: number; // the small shine, low in the middle
   lookTravel: number; // px the whole eye moves when Toki looks (the eyes have no separate pupil)
   cheekRx: number; // cheek half-width
   cheekRy: number;
@@ -152,8 +153,9 @@ export const defaultTokens: FaceTokens = {
   pupilR: 14,
   highlightR: 6,
   lineWeight: 2.6,
-  shineBig: 0.34,
-  shineSmall: 0.15,
+  shineBig: 0.33,
+  shineMid: 0.21,
+  shineSmall: 0.13,
   lookTravel: 7,
   cheekRx: 15.5,
   cheekRy: 12,
@@ -286,6 +288,7 @@ export const tokenRanges: Partial<Record<keyof FaceTokens, [number, number, numb
   highlightR: [0, 14, 1],
   lineWeight: [1, 5, 0.1],
   shineBig: [0.1, 0.5, 0.01],
+  shineMid: [0, 0.4, 0.01],
   shineSmall: [0, 0.3, 0.01],
   lookTravel: [0, 16, 0.5],
   cheekRx: [0, 32, 1],

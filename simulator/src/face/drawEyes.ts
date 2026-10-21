@@ -60,17 +60,35 @@ function roundEye(g: Gfx, base: Eye, f: AnimatedFace, tk: FaceTokens, sparkle: b
   const e: Eye = { ...base, cx: base.cx + f.pupilX * tk.lookTravel + f.saccadeX, cy: base.cy + f.pupilY * tk.lookTravel + f.saccadeY };
   g.fillEllipse(e.cx, e.cy, e.rx, e.ry, palette.line);
 
-  // Two shines, the kawaii signature: big top right, small bottom left. They scale
-  // with the eye, and `highlight` makes them glossier.
+  // The shines, the kawaii signature (Gideon's reference, 21 Oct): a big one top
+  // left, a medium one on the right and a small one low in the middle while the eye
+  // is fully round; once a lid narrows it (from the top or the bottom), the medium
+  // one goes and two remain. They scale with the eye; `highlight` makes them glossier.
   const r = Math.min(e.rx, e.ry);
-  const big = r * tk.shineBig * f.highlight;
-  const bx = e.cx + e.rx * 0.3;
-  const by = e.cy - e.ry * 0.28;
+  const glossy = Math.min(1.3, f.highlight);
+  const narrowed = open < 0.99 || f.smile > 0.01 || f.squint > 0.01;
+  let big = r * tk.shineBig * f.highlight;
+  let bx = e.cx - e.rx * 0.15;
+  let by = e.cy - e.ry * 0.22;
+  let sx = e.cx + e.rx * 0.04;
+  let sy = e.cy + e.ry * 0.5;
+  if (narrowed) {
+    // Two shines, side by side in the part of the eye still showing: the top half
+    // of smiling eyes, the bottom half of cross or half-lidded ones.
+    const top = open < 0.99 ? e.cy - e.ry + (1 - open) * e.ry * 2 * 0.6 : e.cy - e.ry;
+    const bottom = Math.min(e.cy + e.ry, f.smile > 0.01 ? e.cy + e.ry - f.smile * e.ry * 2 : e.cy + e.ry, f.squint > 0.01 ? e.cy + e.ry - f.squint * e.ry : e.cy + e.ry);
+    const mid = (top + bottom) / 2;
+    big = Math.min(big, (bottom - top) * 0.3);
+    by = mid - (bottom - top) * 0.06;
+    sx = e.cx + e.rx * 0.38;
+    sy = mid + (bottom - top) * 0.12;
+  }
   if (sparkle) {
     // Success: the big shine becomes a four-point star.
     g.fillPolygon(starPoints(bx, by, big * 1.5, 0.7), palette.shine);
   } else g.fillCircle(bx, by, big, palette.shine);
-  g.fillCircle(e.cx - e.rx * 0.34, e.cy + e.ry * 0.36, r * tk.shineSmall * Math.min(1.3, f.highlight), palette.shine);
+  if (!narrowed) g.fillCircle(e.cx + e.rx * 0.5, e.cy + e.ry * 0.14, r * tk.shineMid * glossy, palette.shine);
+  g.fillCircle(sx, sy, r * tk.shineSmall * glossy, palette.shine);
 
   // Top lid: flat; it opens and closes (half-lidded faces, blinks).
   if (open < 0.99) {
