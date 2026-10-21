@@ -63,13 +63,15 @@ function grown(src: HTMLCanvasElement, r: number, colour: string): HTMLCanvasEle
 /**
  * Toki's face as a die-cut sticker (spec §9.4): rendered once per expression by
  * the robot's own face renderer, cut out of its screen, then given a sticker shape
- * that follows its silhouette: navy inside, a cream die-cut border, a thin ink edge.
+ * round it. Kawaii pass (21 Oct): the screen is cream now, so the features are cut
+ * from it and set on a soft, round-cornered cream head (a mochi, and a nod to the
+ * robot's screen), with a cream die-cut border and a thin ink edge.
  */
 export function faceSticker(face: string): { url: string; aspect: number } {
   const hit = faceCache.get(face);
   if (hit) return hit;
   const screen = renderCell({ label: face, expression: face as ExpressionId, atMs: 1_200, lab: { hideChrome: true } });
-  // Cut the face out: the flat navy ground becomes transparent.
+  // Cut the face out: the flat cream screen becomes transparent.
   const pad = 40;
   const cut = document.createElement("canvas");
   cut.width = 320 + pad * 2;
@@ -77,14 +79,46 @@ export function faceSticker(face: string): { url: string; aspect: number } {
   const cg = cut.getContext("2d")!;
   cg.drawImage(screen, pad, pad);
   const img = cg.getImageData(0, 0, cut.width, cut.height);
-  const [gr, gg, gb] = hex(palette.ground);
+  const [gr, gg, gb] = hex(palette.face);
   for (let i = 0; i < img.data.length; i += 4) {
     if (Math.abs(img.data[i] - gr) + Math.abs(img.data[i + 1] - gg) + Math.abs(img.data[i + 2] - gb) < 18) img.data[i + 3] = 0;
   }
   cg.putImageData(img, 0, 0);
-  const result = dieCut(cut);
+  const result = mochi(cut);
   faceCache.set(face, result);
   return result;
+}
+
+/** The face's features on a round-cornered cream head fitted round them, then trimmed. */
+function mochi(cut: HTMLCanvasElement): { url: string; aspect: number } {
+  const data = cut.getContext("2d")!.getImageData(0, 0, cut.width, cut.height).data;
+  let x0 = cut.width, y0 = cut.height, x1 = 0, y1 = 0;
+  for (let y = 0; y < cut.height; y++)
+    for (let x = 0; x < cut.width; x++)
+      if (data[(y * cut.width + x) * 4 + 3] > 8) {
+        if (x < x0) x0 = x;
+        if (x > x1) x1 = x;
+        if (y < y0) y0 = y;
+        if (y > y1) y1 = y;
+      }
+  const pad = 14;
+  const out = document.createElement("canvas");
+  out.width = x1 - x0 + 1 + (pad + 11) * 2;
+  out.height = y1 - y0 + 1 + (pad + 11) * 2;
+  const g = out.getContext("2d")!;
+  const head = (grow: number, colour: string) => {
+    const w = x1 - x0 + 1 + (pad + grow) * 2;
+    const h = y1 - y0 + 1 + (pad + grow) * 2;
+    g.fillStyle = colour;
+    g.beginPath();
+    g.roundRect(11 - grow, 11 - grow, w, h, Math.min(w, h) * 0.42);
+    g.fill();
+  };
+  head(11, palette.ink);
+  head(8, palette.cream);
+  head(0, palette.face);
+  g.drawImage(cut, -x0 + pad + 11, -y0 + pad + 11);
+  return { url: out.toDataURL("image/png"), aspect: out.width / out.height };
 }
 
 /**
