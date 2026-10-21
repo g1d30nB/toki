@@ -48,12 +48,14 @@ export type Expression = {
   cheeks: number;
   /** Three lashes at the outer end of closed eyes (content, sleepy). */
   lashes: boolean;
+  /** Degrees the top lid slants down towards the nose: a scowl (cross, after an error). */
+  lidTilt: number;
 };
 
 const base: Expression = {
   shape: "round",
   scale: 1,
-  roundness: 0,
+  roundness: 1, // kawaii pass: round eyes everywhere
   open: 1,
   smile: 0,
   squint: 0,
@@ -71,6 +73,7 @@ const base: Expression = {
   slide: 0,
   cheeks: 1,
   lashes: false,
+  lidTilt: 0,
 };
 
 const e = (over: Partial<Expression>): Expression => ({ ...base, ...over });
@@ -105,15 +108,17 @@ export const expressions = {
     blinkSoftness: 1.8,
     busy: false,
   }),
-  think: e({ pupil: { x: -0.55, y: -0.6 }, brows: { y: 3, angle: -13, tilt: 8 }, manpu: ["dots"], mouth: "line" }),
+  think: e({ pupil: { x: -0.55, y: -0.6 }, brows: { y: 3, angle: -13, tilt: 8 }, manpu: ["dots"], mouth: "pout" }),
   // Pass 3: read and run share the working face; only their eye loops differ,
   // in motion (scanning lines; following output up the screen).
   read: e({ ...WORKING, gaze: "scan" }),
   search: e({ open: 0.75, squint: 0.35, pupilScale: 0.85, gaze: "dart", brows: { y: -3, angle: -10, tilt: 0 }, manpu: ["magnifier"], mouth: "line" }),
-  edit: e({ open: 0.85, smile: 0.14, pupil: { x: 0.1, y: 0.35 }, brows: { y: -4, angle: 6, tilt: 0 }, mouth: "tongue" }),
+  // Kawaii pass: the tongue out, concentrating (the reference's tongue face).
+  edit: e({ pupil: { x: 0.1, y: 0.35 }, brows: { y: -2, angle: 6, tilt: 0 }, mouth: "blep" }),
   // Tuned by Gideon (3 Oct): eyes up and slightly left, right brow raised.
   run: e({ ...WORKING, pupil: { x: -0.2, y: -0.65 }, brows: { y: 0, angle: -2, tilt: 10 }, gaze: "scroll-up" }),
-  test: e({ pupil: { x: 0, y: 0.1 }, blinkRate: 0.45, brows: { y: 5, angle: 8, tilt: 0 }, manpu: ["sweat"], mouth: "wobble" }),
+  // Worried: brows up in the middle, the top lids a little lowered, a nervous mouth.
+  test: e({ open: 0.85, pupil: { x: 0, y: 0.1 }, blinkRate: 0.45, brows: { y: 5, angle: 12, tilt: 0 }, manpu: ["sweat"], mouth: "wobble" }),
   // Eyes up and out to the corner, drifting left to right in time with the "www" wave.
   web: e({ gaze: "follow-www", pupil: { x: 1, y: -1 }, brows: { y: 5, angle: 0, tilt: 10 }, manpu: ["www"], mouth: "o" }),
   // Subagents: spawned mini eyes appear around the face, one per running subagent
@@ -143,21 +148,33 @@ export const expressions = {
   }),
   // Sparkles (a small cream star cluster) set finishing apart from your approval
   // (blush). Tests pass will be bolder: star eyes and gold sparkles (spec §4.2).
-  done: e({ shape: "arc", brows: { y: 4, angle: 0, tilt: 0 }, mouth: "smile", manpu: ["sparkles"], busy: false }),
+  // Kawaii pass: happy closed eyes ^ ^, a cat's ω, the sparkles.
+  done: e({ shape: "arc", brows: { y: 4, angle: 0, tilt: 0 }, mouth: "cat", manpu: ["sparkles"], busy: false }),
   // Spiral eyes for 3 s (Gideon, 3 Oct; was 0.5 s), then > < (spec §4.2).
-  error: e({ shape: "line", intro: { shape: "spiral", ms: 3_000 }, brows: { y: -3, angle: -18, tilt: 0 }, mouth: "pout" }),
+  // Kawaii pass: after the spiral, cross (the reference's angry face): a scowl, the
+  // brows straight and slanted, an open shout.
+  error: e({
+    shape: "round",
+    intro: { shape: "spiral", ms: 3_000 },
+    open: 0.82,
+    lidTilt: 22,
+    pupil: { x: 0, y: 0.2 },
+    brows: { y: -1, angle: -26, tilt: 0, curve: 0 },
+    mouth: "shout",
+  }),
   // Your answers from the robot (spec §4.2): a happy squint and blush; a respectful "oh, okay".
   // Kawaii pass: the squeeze > < and an open smile, cheeks flushed.
   approved: e({ shape: "line", brows: { y: 5, angle: 2, tilt: 0 }, mouth: "open", cheeks: 1.25, busy: false }),
-  denied: e({ open: 0.85, pupil: { x: 0, y: 0.1 }, brows: { y: 3, angle: 10, tilt: 0 }, mouth: "o" }),
+  // "Oh, okay": a little deflated. Lids lowered, brows up in the middle, a small frown.
+  denied: e({ open: 0.75, pupil: { x: 0, y: 0.2 }, brows: { y: 3, angle: 12, tilt: 0 }, mouth: "pout" }),
 
   // Claude asked you a question (spec §4.2 "Blocked: asked a question"; Gideon,
   // 3 Oct: answered in Claude, not on Toki). Blocked's big patient eyes, but one
   // brow raised, quizzical, and a teal "?" above where blocked has its "…".
   asked: e({
     shape: "round",
-    highlight: 1.7,
-    scale: 1.06,
+    highlight: 1.2,
+    scale: 1.12,
     roundness: 1,
     pupil: AT_YOU,
     pupilScale: 1.1,
@@ -171,23 +188,24 @@ export const expressions = {
 
   // Touch (spec §6, step 6). A tap on the face is a boop: a surprised, wide-eyed
   // moment with brows up, then a giggle squint.
+  // Kawaii pass: a moment's surprise, then the squeeze > < and an open smile: a giggle.
   boop: e({
-    shape: "arc",
+    shape: "line",
     intro: { shape: "round", ms: 280 },
-    roundness: 0.6,
     pupilScale: 0.85,
     brows: { y: 9, angle: 4, tilt: 0 },
-    mouth: "smile",
+    mouth: "open",
+    cheeks: 1.25,
     busy: false,
   }),
   // Quiet mode (double-tap): eyes closed, content, "zZZZ" climbing in the corner
   // (Gideon, 3 Oct; was "shh"). Only approvals get through until it ends.
-  quiet: e({ shape: "sleep", brows: { y: -2, angle: 0, tilt: 0, len: 0.85 }, mouth: "smile", manpu: ["zzz"], busy: false }),
+  quiet: e({ shape: "sleep", lashes: true, brows: { y: -2, angle: 0, tilt: 0, len: 0.85 }, mouth: "smile", manpu: ["zzz"], busy: false }),
   // "Close the day?" (long-press): hopeful eyes slid up above the question and
   // two booth buttons. Smiling lids and no "…" keep it apart from blocked.
   closeAsk: e({
-    roundness: 0.8,
-    highlight: 1.5,
+    roundness: 1,
+    highlight: 1.15,
     smile: 0.12,
     pupil: AT_YOU,
     pupilScale: 1.05,
@@ -196,9 +214,9 @@ export const expressions = {
     busy: false,
   }),
   // Day closed, earned: star eyes and sparkles, then the shutter comes down.
-  closed: e({ shape: "star", brows: { y: 7, angle: 0, tilt: 0 }, mouth: "smile", manpu: ["sparkles"], busy: false }),
+  closed: e({ shape: "star", brows: { y: 7, angle: 0, tilt: 0 }, mouth: "open", cheeks: 1.2, manpu: ["sparkles"], busy: false }),
   // Day closed, quiet: a soft yawn, then the shutter comes most of the way down.
-  sleepy: e({ shape: "sleep", brows: { y: -3, angle: 5, tilt: 0, len: 0.85 }, mouth: "yawn", busy: false }),
+  sleepy: e({ shape: "sleep", lashes: true, brows: { y: -3, angle: 5, tilt: 0, len: 0.85 }, mouth: "yawn", busy: false }),
   // After closing: asleep under the shutter. It sits low, so after a quiet close
   // the sleeping eyes peek out from the gap under the shutter.
   night: e({ shape: "sleep", brows: { y: -4, angle: 0, tilt: 0, len: 0.8 }, mouth: "none", busy: false, slide: 96 }),
@@ -239,6 +257,9 @@ export const expressionSliders: { path: string; label: string; min: number; max:
   { path: "mouthShift", label: "mouth shift", min: -30, max: 30, step: 1 },
   { path: "blinkRate", label: "blink interval ×", min: 0.3, max: 3, step: 0.1 },
   { path: "blinkSoftness", label: "blink softness ×", min: 0.5, max: 3, step: 0.1 },
+  { path: "cheeks", label: "cheeks ×", min: 0, max: 1.6, step: 0.05 },
+  { path: "lidTilt", label: "lid tilt (scowl)", min: -30, max: 40, step: 1 },
+  { path: "brows.curve", label: "brows arch", min: 0, max: 0.6, step: 0.02 },
 ];
 
 const ANSWER_MS = 1_200; // the approve / deny reaction is a one-shot (spec: under 1.5 s)

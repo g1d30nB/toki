@@ -56,11 +56,11 @@ function sweat({ g, f, tk, t, k, grow }: Ctx) {
   const y = r.cy - r.ry * 0.9 - (1 - slide) * 18 + Math.sin(t / 600) * 1.5;
   const R = 7 * s;
   // Teardrop: a circle plus a triangle pointing up; ink outline first, then the fill.
-  g.fillCircle(x, y + R, R + 2, palette.ink);
-  g.fillTriangle(x - R - 1.5, y + R * 0.7, x + R + 1.5, y + R * 0.7, x, y - R * 1.5, palette.ink);
+  g.fillCircle(x, y + R, R + 2, palette.line);
+  g.fillTriangle(x - R - 1.5, y + R * 0.7, x + R + 1.5, y + R * 0.7, x, y - R * 1.5, palette.line);
   g.fillCircle(x, y + R, R, palette.teal);
   g.fillTriangle(x - R, y + R * 0.75, x + R, y + R * 0.75, x, y - R * 1.2, palette.teal);
-  g.fillCircle(x - R * 0.35, y + R * 0.75, R * 0.28, palette.cream);
+  g.fillCircle(x - R * 0.35, y + R * 0.75, R * 0.28, palette.shine);
 }
 
 /**
@@ -76,12 +76,12 @@ function magnifier({ g, f, tk, t, k }: Ctx) {
   const y = r.cy + r.ry * tk.lensY;
   g.magnify(x, y, R, tk.lensZoom);
   // Glare: a small crescent of light on the glass, top left.
-  g.fillArc(x, y, R * 0.62, R * 0.74, 200, 250, palette.cream);
+  g.fillArc(x, y, R * 0.62, R * 0.74, 200, 250, palette.shine);
   // Rim and handle.
-  g.fillArc(x, y, R, R + tk.lensRim, 0, 360, palette.cream);
+  g.fillArc(x, y, R, R + tk.lensRim, 0, 360, palette.line);
   const hx = x + (R + tk.lensRim) * 0.7;
   const hy = y + (R + tk.lensRim) * 0.7;
-  g.drawWideLine(hx, hy, hx + R * 0.75, hy + R * 0.75, tk.lensRim * 1.1, palette.cream);
+  g.drawWideLine(hx, hy, hx + R * 0.75, hy + R * 0.75, tk.lensRim * 1.1, palette.line);
 }
 
 /** Polyline stroke through points: anti-aliased drawWideLine segments on the robot too. */
@@ -124,7 +124,7 @@ function www({ g, f, tk, t, k }: Ctx) {
       [x0 + W * 0.75, y0 + H],
       [x0 + W, y0],
     ];
-    stroke(g, pts, tk.wwwWeight, palette.cream);
+    stroke(g, pts, tk.wwwWeight, palette.line);
   }
 }
 
@@ -174,7 +174,7 @@ function sparkles({ g, f, tk, t, leaving }: Ctx) {
   const hold = clamp01((t - tk.sparkleHoldMs) / tk.sparkleFadeMs);
   const fade = Math.max(hold, leaving);
   if (fade >= 1) return;
-  const c = mix(palette.cream, palette.ground, fade);
+  const c = mix(palette.mustard, palette.face, fade); // kawaii pass: mustard, to read on cream
   stars.forEach((st, i) => {
     const local = t - i * tk.sparkleStaggerMs;
     if (local <= 0) return;
@@ -215,7 +215,7 @@ function zzz({ g, tk, t, k }: Ctx) {
     // big), right edges 12 px clear of the screen edge (spec §7.3).
     const x = 320 - 12 - tk.zzzStep * (3 - i) - g.textWidth(i === 0 ? "z" : "Z", size) / 2;
     const y = 12 + tk.zzzRise * (3 - i) + Math.sin(t / 700 + i) * 1.5;
-    const c = mix(palette.cream, palette.ground, Math.max(1 - p, fade));
+    const c = mix(palette.line, palette.face, Math.max(1 - p, fade));
     g.drawString(i === 0 ? "z" : "Z", x, y, c, size, "top_center", true);
   }
 }
@@ -231,7 +231,7 @@ function question({ g, f, tk, t, k }: Ctx) {
   // Bigger than the "…" it replaces, so asked and blocked part at the edge of vision.
   const R = 17 * Math.min(1.1, k);
   const y = Math.max(10 + R, top - tk.dotsGap - 6 + Math.sin(t / 500) * 1.5);
-  g.fillCircle(160, y, R + 2.5, palette.cream);
+  g.fillCircle(160, y, R + 2.5, palette.line);
   g.fillCircle(160, y, R, palette.teal);
   g.drawString("?", 160, y + 1, palette.cream, 28 * Math.min(1, k), "middle_center", true);
 }

@@ -25,6 +25,7 @@ export type AnimatedFace = {
   stretch: number; // squash and stretch on expression change: 1 = rest
   offsetY: number; // breathing plus slide, px
   cheeks: number; // kawaii pass: pink cheek size, 0 none
+  lidTilt: number; // degrees the top lid slants down towards the nose
   lashes: boolean;
 };
 
@@ -45,7 +46,7 @@ const clamp01 = (t: number) => Math.max(0, Math.min(1, t));
 
 type Pose = Pick<
   Expression,
-  "scale" | "roundness" | "open" | "smile" | "squint" | "pupil" | "pupilScale" | "highlight" | "brows" | "slide" | "mouthShift" | "cheeks" | "lashes"
+  "scale" | "roundness" | "open" | "smile" | "squint" | "pupil" | "pupilScale" | "highlight" | "brows" | "slide" | "mouthShift" | "cheeks" | "lashes" | "lidTilt"
 > & {
   shape: EyeShape;
   mouth: MouthShape;
@@ -69,6 +70,7 @@ function blend(a: Pose, b: Pose, t: number): Pose {
       curve: a.brows.curve === undefined && b.brows.curve === undefined ? undefined : lerp(a.brows.curve ?? 0.32, b.brows.curve ?? 0.32, t),
     },
     cheeks: lerp(a.cheeks, b.cheeks, t),
+    lidTilt: lerp(a.lidTilt, b.lidTilt, t),
     lashes: t < 0.5 ? a.lashes : b.lashes,
     slide: lerp(a.slide, b.slide, t),
     mouthShift: lerp(a.mouthShift, b.mouthShift, t),
@@ -180,6 +182,7 @@ export class FaceAnimator {
       stretch,
       offsetY: breath + pose.slide,
       cheeks: pose.cheeks,
+      lidTilt: pose.lidTilt,
       lashes: pose.lashes,
     };
   }

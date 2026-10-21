@@ -163,7 +163,7 @@ export const defaultTokens: FaceTokens = {
   cheekY: 54,
   browCurve: 0.42,
   browThick: 6,
-  lashLen: 9,
+  lashLen: 17,
 
   smileCurve: 2.4,
   manpuScale: 1.5,

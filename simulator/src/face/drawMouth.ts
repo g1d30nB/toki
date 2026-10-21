@@ -68,8 +68,8 @@ export function drawMouth(g: Gfx, f: AnimatedFace, tk: FaceTokens, now: number) 
     }
     case "blep": {
       // The tongue out: a straight mouth, the tongue hanging below it.
-      g.drawWideLine(x - w * 0.6, y, x + w * 0.6, y, r, c);
-      const tw = w * 0.36;
+      g.drawWideLine(x - w * 0.75, y, x + w * 0.75, y, r, c);
+      const tw = w * 0.42;
       g.fillRect(x - tw, y, tw * 2, tw * 0.9, palette.tomato);
       g.fillCircle(x, y + tw * 0.9, tw, palette.tomato);
       g.drawWideLine(x, y + r, x, y + tw * 1.2, r * 0.5, mixLine());
@@ -77,9 +77,9 @@ export function drawMouth(g: Gfx, f: AnimatedFace, tk: FaceTokens, now: number) 
     }
     case "shout": {
       // Cross or shocked: an open mouth, wider at the bottom, a tongue inside.
-      const tw = w * 0.42;
-      const bw = w * 0.62;
-      const h = w * 0.9;
+      const tw = w * 0.5;
+      const bw = w * 0.75;
+      const h = w * 1.1;
       g.fillPolygon(
         [
           [x - tw, y - h * 0.4],

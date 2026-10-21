@@ -148,15 +148,16 @@ export class MiniLayer {
       for (const side of [-1, 1]) {
         const ex = side * (R + tk.miniGap / 2 * s.size) * sx;
         const [x, y] = rot(ex, 0);
-        g.fillEllipse(x, y, R * sx, R * sy * blink, palette.mustard);
-        if (blink > 0.5) g.fillEllipse(x + (dx / d) * off, y + (dy / d) * off, pr * sx, pr * sy * blink, palette.ink);
+        // Kawaii pass: a tiny navy eye with a shine on the side it's looking towards.
+        g.fillEllipse(x, y, R * sx, R * sy * blink, palette.line);
+        if (blink > 0.5) g.fillCircle(x + (dx / d) * off - R * 0.2, y + (dy / d) * off - R * 0.25, Math.max(1.5, pr * 0.75 * sx), palette.shine);
         // Little brows: short cream strokes, inner ends a touch higher (eager).
         const by = -R * sy - tk.miniBrowGap;
         const half = (tk.miniBrowLen / 2) * sx * s.size;
         const lift = half * Math.sin((tk.miniBrowAngle * Math.PI) / 180);
         const [ax, ay] = rot(ex - side * half, by - lift);
         const [bx, bY] = rot(ex + side * half, by + lift);
-        g.drawWideLine(ax, ay, bx, bY, tk.miniBrowWeight * Math.min(sx, 1), palette.cream);
+        g.drawWideLine(ax, ay, bx, bY, tk.miniBrowWeight * Math.min(sx, 1), palette.line);
       }
     });
   }

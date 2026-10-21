@@ -66,7 +66,7 @@ function roundEye(g: Gfx, base: Eye, f: AnimatedFace, tk: FaceTokens, sparkle: b
   // one goes and two remain. They scale with the eye; `highlight` makes them glossier.
   const r = Math.min(e.rx, e.ry);
   const glossy = Math.min(1.3, f.highlight);
-  const narrowed = open < 0.99 || f.smile > 0.01 || f.squint > 0.01;
+  const narrowed = open < 0.99 || f.smile > 0.01 || f.squint > 0.01 || Math.abs(f.lidTilt) > 0.5;
   let big = r * tk.shineBig * f.highlight;
   let bx = e.cx - e.rx * 0.15;
   let by = e.cy - e.ry * 0.22;
@@ -90,10 +90,11 @@ function roundEye(g: Gfx, base: Eye, f: AnimatedFace, tk: FaceTokens, sparkle: b
   if (!narrowed) g.fillCircle(e.cx + e.rx * 0.5, e.cy + e.ry * 0.14, r * tk.shineMid * glossy, palette.shine);
   g.fillCircle(sx, sy, r * tk.shineSmall * glossy, palette.shine);
 
-  // Top lid: flat; it opens and closes (half-lidded faces, blinks).
-  if (open < 0.99) {
+  // Top lid: it opens and closes (half-lidded faces, blinks), and slants down
+  // towards the nose for a scowl (lidTilt).
+  if (open < 0.99 || Math.abs(f.lidTilt) > 0.5) {
     const y0 = e.cy - e.ry + (1 - open) * e.ry * 2 * 0.6;
-    lid(g, e, tk, y0, 0, true);
+    lid(g, e, tk, y0, -e.side * Math.tan((f.lidTilt * Math.PI) / 180), true);
   }
   if (f.smile > 0.01) smileLid(g, e, tk, f.smile);
   // Lower lid: rises when squinting.
@@ -162,12 +163,10 @@ function spiralEye(g: Gfx, e: Eye, tk: FaceTokens, t: number) {
   polyline(g, pts, tk.lineWeight, palette.line);
 }
 
-/** Happy arcs: ^ ^ (done, boop). */
-function arcEye(g: Gfx, e: Eye, tk: FaceTokens, lashes: boolean) {
+/** Happy arcs: ^ ^ (done). */
+function arcEye(g: Gfx, e: Eye, tk: FaceTokens) {
   const r = e.rx * 0.78;
-  const cy = e.cy + e.ry * 0.35;
-  polyline(g, arcPoints(e.cx, cy, r, 200, 340), tk.lineWeight * 1.15, palette.line);
-  if (lashes) lashTicks(g, e, tk, e.cx + e.side * r * Math.cos((20 * Math.PI) / 180), cy - r * Math.sin((20 * Math.PI) / 180), -1);
+  polyline(g, arcPoints(e.cx, e.cy + e.ry * 0.35, r, 200, 340), tk.lineWeight * 1.15, palette.line);
 }
 
 /** Content closed eyes: a downward curve, like a sleeping smile (quiet, sleepy, night). */
@@ -175,22 +174,17 @@ function sleepEye(g: Gfx, e: Eye, tk: FaceTokens, lashes: boolean) {
   const r = e.rx * 0.8;
   const cy = e.cy - e.ry * 0.15;
   polyline(g, arcPoints(e.cx, cy, r, 20, 160), tk.lineWeight * 1.15, palette.line);
-  // The lashes grow from the outer end of the curve.
-  if (lashes) lashTicks(g, e, tk, e.cx + e.side * r * Math.cos((20 * Math.PI) / 180), cy + r * Math.sin((20 * Math.PI) / 180), 1);
-}
-
-/** Three short lashes fanning out from (x, y), on the eye's outer side; dir 1 for a ∪, -1 for a ∩. */
-function lashTicks(g: Gfx, e: Eye, tk: FaceTokens, x: number, y: number, dir: 1 | -1) {
-  const L = tk.lashLen;
-  for (const [a, k] of [
-    [-40, 0],
-    [-10, 0.45],
-    [20, 0.9],
-  ] as const) {
-    const rad = (a * Math.PI) / 180;
-    const sx = x - e.side * k * 3;
-    const sy = y - dir * k * 4;
-    g.drawWideLine(sx, sy, sx + e.side * Math.cos(rad) * L, sy - dir * Math.sin(-rad + Math.PI / 6) * L, tk.lineWeight * 0.85, palette.line);
+  if (!lashes) return;
+  // Three short lashes fanning out and up from the outer end of the curve, each
+  // starting a little further along it (the reference's content face).
+  for (let k = 0; k < 3; k++) {
+    // From just inside the end of the curve, fanning outwards: down-out, out, up-out.
+    const along = ((e.side === 1 ? 24 - k * 4 : 156 + k * 4) * Math.PI) / 180;
+    const ox = e.cx + Math.cos(along) * r;
+    const oy = cy + Math.sin(along) * r;
+    const up = ((-30 + k * 36) * Math.PI) / 180;
+    const L = tk.lashLen * (1 - k * 0.08);
+    g.drawWideLine(ox, oy, ox + e.side * Math.cos(up) * L, oy - Math.sin(up) * L, tk.lineWeight * 0.85, palette.line);
   }
 }
 
@@ -278,7 +272,7 @@ export function drawEyes(g: Gfx, f: AnimatedFace, tk: FaceTokens, now = 0) {
   for (const e of eyeLayout(f, tk)) {
     brow(g, e, f, tk);
     if (f.shape === "spiral") spiralEye(g, e, tk, now);
-    else if (f.shape === "arc") arcEye(g, e, tk, f.lashes);
+    else if (f.shape === "arc") arcEye(g, e, tk);
     else if (f.shape === "line") chevronEye(g, e, tk);
     else if (f.shape === "sleep") sleepEye(g, e, tk, f.lashes);
     else if (f.shape === "star") starEye(g, e, tk);
