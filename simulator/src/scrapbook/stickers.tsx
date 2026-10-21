@@ -190,7 +190,7 @@ const BORDER = 13;
  * Three kinds of round face sticker (Gideon's references, 21 Oct), so a page of them
  * feels varied; each face always gets the same kind:
  * - soft: a strong shadow crescent down the right, a curved gloss streak (the crown)
- * - rim: a second navy line round the lower edge, meeting the outline, a pale band below (a disc)
+ * - rim: a crescent in the lower right: a pale band and a second navy line
  * - bubble: a clean body with two round gloss dots, big and small
  */
 type RoundKind = "soft" | "rim" | "bubble";
@@ -248,22 +248,29 @@ function mochi(cut: HTMLCanvasElement, kind: RoundKind, border = true): { url: s
     g.stroke();
     dot(-0.3, -0.8, R * 0.035);
   } else if (kind === "rim") {
-    // A disc seen a little from below (Gideon's reference): the face is a smaller
-    // circle set higher, and a second navy line runs round its lower edge from where
-    // it meets the outline on one side to where it meets it on the other, a pale
-    // band below it.
-    const r = R * 0.92;
-    const d = R * 0.12;
+    // A crescent in the lower right (Gideon, 21 Oct): a band 14% of the radius at
+    // its thickest, at 45°, tapering to nothing 50° either side (100° of the rim, under
+    // a third). Its inner edge is part of a bigger circle set up and to the left,
+    // solved so it crosses the outline exactly there; the line along it is as thick
+    // as the outline, and the clip trims its ends into the outline.
+    const t = R * 0.14;
+    const span = (50 * Math.PI) / 180;
+    const d = (2 * R * t - t * t) / (2 * (R - t - R * Math.cos(span)));
+    const r = R + d - t;
+    const ux = Math.SQRT1_2;
+    const uy = Math.SQRT1_2;
+    const ix = c - d * ux;
+    const iy = c - d * uy;
     disc(R, mix(palette.face, palette.water, 0.24));
-    disc(r, palette.face, 0, -d);
-    // Where the two circles cross: y from the outer centre, then the angle on the inner one.
-    const y = (r * r - R * R - d * d) / (2 * d);
-    const a = Math.atan2(y + d, Math.sqrt(R * R - y * y));
-    g.strokeStyle = palette.line;
-    g.lineWidth = OUTLINE * 0.75;
-    g.lineCap = "round";
+    g.fillStyle = palette.face;
     g.beginPath();
-    g.arc(c, c - d, r, a, Math.PI - a);
+    g.arc(ix, iy, r, 0, Math.PI * 2);
+    g.fill();
+    const end = (k: number) => Math.atan2(c + R * Math.sin(Math.PI / 4 + k * span) - iy, c + R * Math.cos(Math.PI / 4 + k * span) - ix);
+    g.strokeStyle = palette.line;
+    g.lineWidth = OUTLINE;
+    g.beginPath();
+    g.arc(ix, iy, r, end(-1), end(1));
     g.stroke();
     dot(-0.5, -0.55, R * 0.09);
     dot(-0.3, -0.72, R * 0.045);
