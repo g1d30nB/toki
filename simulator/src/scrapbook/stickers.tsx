@@ -191,7 +191,7 @@ const BORDER = 13;
  * feels varied; each face always gets the same kind:
  * - soft: a strong shadow crescent down the right, a curved gloss streak (the crown)
  * - cool: the soft kind's shadow in pale blue, two round gloss dots
- * - bubble: a light pink shade, two round gloss dots, big and small
+ * - bubble: a light gold shade, two round gloss dots, big and small
  */
 type RoundKind = "soft" | "cool" | "bubble";
 const ROUND_KINDS: RoundKind[] = ["soft", "cool", "bubble"];
@@ -255,8 +255,9 @@ function mochi(cut: HTMLCanvasElement, kind: RoundKind, border = true): { url: s
     dot(-0.5, -0.55, R * 0.09);
     dot(-0.3, -0.72, R * 0.045);
   } else {
-    // A light pink shade and two round gloss dots.
-    disc(R, mix(palette.face, palette.cheek, 0.16));
+    // A light gold shade (the mustard of OOPS's second O, lightened) and two round
+    // gloss dots: pink, blue and gold across the three kinds (Gideon, 21 Oct).
+    disc(R, mix(palette.face, palette.mustard, 0.3));
     disc(R * 0.95, palette.face, -R * 0.08, -R * 0.08); // a deeper band (Gideon, 21 Oct)
     dot(-0.48, -0.56, R * 0.11);
     dot(-0.24, -0.74, R * 0.055);
