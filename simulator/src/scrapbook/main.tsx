@@ -3,16 +3,18 @@ import { createRoot } from "react-dom/client";
 import "../index.css";
 import "./scrapbook.css";
 
-// Toki's typeface for the canvas (it draws with whatever has loaded).
-void document.fonts?.load('700 28px "Baloo 2"');
-void document.fonts?.load('500 28px "Baloo 2"');
 import { CardProvider } from "./CardLayer";
 import { App } from "./App";
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <CardProvider>
-      <App />
-    </CardProvider>
-  </StrictMode>,
+// Toki's typeface for the canvas, which draws with whatever has loaded: the lettered
+// stickers are drawn once and kept, so wait for it (a local file: milliseconds).
+const fonts = ["800 100px", "700 28px", "500 28px"].map((f) => document.fonts?.load(`${f} "Baloo 2"`));
+void Promise.allSettled(fonts).then(() =>
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <CardProvider>
+        <App />
+      </CardProvider>
+    </StrictMode>,
+  ),
 );

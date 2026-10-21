@@ -9,7 +9,6 @@ import contextFullArt from "../../../art/stickers/context-full.svg?url";
 import helloArt from "../../../art/stickers/hello-world.svg?url";
 import leaveMeAloneArt from "../../../art/stickers/leave-me-alone.svg?url";
 import nopeArt from "../../../art/stickers/nope.svg?url";
-import oopsArt from "../../../art/stickers/oops.svg?url";
 import planModeArt from "../../../art/stickers/plan-mode.svg?url";
 import questionArt from "../../../art/stickers/question.svg?url";
 import shippedArt from "../../../art/stickers/shipped.svg?url";
@@ -71,6 +70,14 @@ function grown(src: HTMLCanvasElement, r: number, colour: string): HTMLCanvasEle
 export function faceSticker(face: string): { url: string; aspect: number } {
   const hit = faceCache.get(face);
   if (hit) return hit;
+  const { url, aspect } = mochi(faceCut(face), kindOfFace(face));
+  const result = { url, aspect };
+  faceCache.set(face, result);
+  return result;
+}
+
+/** Toki's features for a face, cut out of the robot's own rendering of its screen. */
+function faceCut(face: string): HTMLCanvasElement {
   const screen = renderCell({ label: face, expression: face as ExpressionId, atMs: 1_200, lab: { hideChrome: true } });
   // Cut the face out: the flat cream screen becomes transparent.
   const pad = 40;
@@ -85,8 +92,93 @@ export function faceSticker(face: string): { url: string; aspect: number } {
     if (Math.abs(img.data[i] - gr) + Math.abs(img.data[i + 1] - gg) + Math.abs(img.data[i + 2] - gb) < 18) img.data[i + 3] = 0;
   }
   cg.putImageData(img, 0, 0);
-  const result = mochi(cut);
-  faceCache.set(face, result);
+  return cut;
+}
+
+/**
+ * A lettered sticker drawn in code (Gideon, 21 Oct: the generated OOPS art didn't
+ * match the kawaii stickers): the word in Baloo 2 ExtraBold, Toki's own typeface,
+ * each letter in its own colour with a gloss and the faces' bottom shade, bouncing
+ * and tilting a little; one chunky navy outline round them all; Toki's face tucked
+ * in at the end; the white die-cut round everything.
+ */
+const letterCache = new Map<string, { url: string; aspect: number }>();
+export function letterSticker(text: string, colours: string[], face?: string): { url: string; aspect: number } {
+  const key = `${text}|${colours.join()}|${face ?? ""}`;
+  const hit = letterCache.get(key);
+  if (hit) return hit;
+  const size = 150;
+  const font = `800 ${size}px "Baloo 2"`;
+  const pen = 17; // the navy outline round the letters
+  const m = document.createElement("canvas").getContext("2d")!;
+  m.font = font;
+  const widths = [...text].map((ch) => m.measureText(ch).width);
+  const kern = -6;
+  const head = face ? 150 : 0;
+  const W = widths.reduce((a, w) => a + w + kern, 0) + head + 200;
+  const H = size * 1.6 + 120;
+  const c = document.createElement("canvas");
+  c.width = Math.ceil(W);
+  c.height = Math.ceil(H);
+  const g = c.getContext("2d")!;
+  const base = H / 2 + size * 0.36;
+  // Each letter's place: a little bounce and tilt, the same every time.
+  let x = 100;
+  const placed = [...text].map((ch, i) => {
+    const p = { ch, x: x + widths[i] / 2, y: base + [0, -10, 4, -6, 8, -4][i % 6], tilt: [-0.07, 0.05, -0.03, 0.06, -0.05, 0.04][i % 6], colour: colours[i % colours.length] };
+    x += widths[i] + kern;
+    return p;
+  });
+  const at = (p: (typeof placed)[number], draw: (gg: CanvasRenderingContext2D) => void, gg = g) => {
+    gg.save();
+    gg.translate(p.x, p.y);
+    gg.rotate(p.tilt);
+    gg.font = font;
+    gg.textAlign = "center";
+    gg.textBaseline = "alphabetic";
+    draw(gg);
+    gg.restore();
+  };
+  // The outline: every letter stroked fat in navy, merging into one plate.
+  for (const p of placed)
+    at(p, (gg) => {
+      gg.lineJoin = "round";
+      gg.lineWidth = pen * 2;
+      gg.strokeStyle = palette.line;
+      gg.strokeText(p.ch, 0, 0);
+      gg.fillStyle = palette.line;
+      gg.fillText(p.ch, 0, 0);
+    });
+  // Then each letter on its own layer: its colour, the bottom shade, a gloss.
+  for (const p of placed) {
+    const l = document.createElement("canvas");
+    l.width = c.width;
+    l.height = c.height;
+    const lg = l.getContext("2d")!;
+    at(p, (gg) => {
+      gg.fillStyle = p.colour;
+      gg.fillText(p.ch, 0, 0);
+    }, lg);
+    shade(l, 6, 9);
+    lg.globalCompositeOperation = "source-atop";
+    lg.fillStyle = "rgba(255,255,255,0.85)";
+    lg.beginPath();
+    // On the top-left shoulder, rotated with the letter.
+    const w = widths[placed.indexOf(p)];
+    const gx = -w * 0.3;
+    const gy = -size * 0.58;
+    lg.ellipse(p.x + gx * Math.cos(p.tilt) - gy * Math.sin(p.tilt), p.y + gx * Math.sin(p.tilt) + gy * Math.cos(p.tilt), size * 0.045, size * 0.085, 0.55 + p.tilt, 0, Math.PI * 2);
+    lg.fill();
+    g.drawImage(l, 0, 0);
+  }
+  // Toki, small, against the end of the word.
+  if (face) {
+    const { canvas: h } = mochi(faceCut(face), kindOfFace(face), false);
+    const d = 190;
+    g.drawImage(h, x - 14, base - d * 0.8, d, d);
+  }
+  const result = dieCut(c, 0, 20);
+  letterCache.set(key, result);
   return result;
 }
 
@@ -94,8 +186,19 @@ export function faceSticker(face: string): { url: string; aspect: number } {
 const OUTLINE = 8;
 const BORDER = 13;
 
+/**
+ * Three kinds of round face sticker (Gideon's references, 21 Oct), so a page of them
+ * feels varied; each face always gets the same kind:
+ * - soft: a strong shadow crescent down the right, a curved gloss streak (the crown)
+ * - rim: a second navy line inside the lower right, a lighter band behind it (a disc)
+ * - bubble: a clean body with two round gloss dots, big and small
+ */
+type RoundKind = "soft" | "rim" | "bubble";
+const ROUND_KINDS: RoundKind[] = ["soft", "rim", "bubble"];
+const kindOfFace = (face: string): RoundKind => ROUND_KINDS[[...face].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % 3];
+
 /** The face's features on a round cream body fitted round them. */
-function mochi(cut: HTMLCanvasElement): { url: string; aspect: number } {
+function mochi(cut: HTMLCanvasElement, kind: RoundKind, border = true): { url: string; aspect: number; canvas: HTMLCanvasElement } {
   const data = cut.getContext("2d")!.getImageData(0, 0, cut.width, cut.height).data;
   let x0 = cut.width, y0 = cut.height, x1 = 0, y1 = 0;
   for (let y = 0; y < cut.height; y++)
@@ -113,41 +216,57 @@ function mochi(cut: HTMLCanvasElement): { url: string; aspect: number } {
   for (let y = y0; y <= y1; y++)
     for (let x = x0; x <= x1; x++)
       if (data[(y * cut.width + x) * 4 + 3] > 8) far = Math.max(far, Math.hypot(x - fx, y - fy));
-  const rx = far + 10;
-  const ry = rx;
+  const R = far + 10;
   const edge = OUTLINE + BORDER;
   const out = document.createElement("canvas");
-  out.width = Math.ceil((rx + edge) * 2);
-  out.height = Math.ceil((ry + edge) * 2);
+  out.width = out.height = Math.ceil((R + edge) * 2);
   const g = out.getContext("2d")!;
-  const cx = out.width / 2;
-  const cy = out.height / 2;
-  const oval = (grow: number, colour: string, dx = 0, dy = 0) => {
+  const c = out.width / 2;
+  const disc = (r: number, colour: string, dx = 0, dy = 0) => {
     g.fillStyle = colour;
     g.beginPath();
-    g.ellipse(cx + dx, cy + dy, rx + grow, ry + grow, 0, 0, Math.PI * 2);
+    g.arc(c + dx, c + dy, r, 0, Math.PI * 2);
     g.fill();
   };
-  oval(edge, "#ffffff");
-  oval(OUTLINE, palette.line);
-  // The body: a warm shade along the bottom, under the cream lit from the top left.
+  const dot = (ax: number, ay: number, r: number) => disc(r, "#ffffff", ax * R, ay * R);
+  if (border) disc(R + edge, "#ffffff");
+  disc(R + OUTLINE, palette.line);
   g.save();
   g.beginPath();
-  g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+  g.arc(c, c, R, 0, Math.PI * 2);
   g.clip();
-  oval(0, mix(palette.face, palette.cheek, 0.22));
-  oval(0, palette.face, -rx * 0.06, -ry * 0.12);
-  // Gloss: a soft white streak top left, and a dot after it.
-  g.fillStyle = "#ffffff";
-  g.beginPath();
-  g.ellipse(cx - rx * 0.62, cy - ry * 0.52, rx * 0.12, ry * 0.07, -0.6, 0, Math.PI * 2);
-  g.fill();
-  g.beginPath();
-  g.arc(cx - rx * 0.42, cy - ry * 0.7, Math.max(2.5, ry * 0.04), 0, Math.PI * 2);
-  g.fill();
+  if (kind === "soft") {
+    // A strong shadow crescent down the right and bottom, then a curved gloss streak.
+    disc(R, mix(palette.face, palette.cheek, 0.38));
+    disc(R * 0.94, palette.face, -R * 0.12, -R * 0.09);
+    g.strokeStyle = "#ffffff";
+    g.lineCap = "round";
+    g.lineWidth = R * 0.07;
+    g.beginPath();
+    g.arc(c, c, R * 0.78, Math.PI * 1.13, Math.PI * 1.36);
+    g.stroke();
+    dot(-0.3, -0.8, R * 0.035);
+  } else if (kind === "rim") {
+    // A lighter band along the lower right, bounded by a second navy line.
+    disc(R, mix(palette.face, palette.water, 0.18));
+    disc(R * 0.9, palette.face, -R * 0.07, -R * 0.09);
+    g.strokeStyle = palette.line;
+    g.lineWidth = OUTLINE * 0.7;
+    g.beginPath();
+    g.arc(c - R * 0.07, c - R * 0.09, R * 0.9, Math.PI * -0.1, Math.PI * 0.85);
+    g.stroke();
+    dot(-0.5, -0.55, R * 0.09);
+    dot(-0.3, -0.72, R * 0.045);
+  } else {
+    // Clean, with a faint shade and two round gloss dots.
+    disc(R, mix(palette.face, palette.cheek, 0.16));
+    disc(R * 0.97, palette.face, -R * 0.04, -R * 0.05);
+    dot(-0.48, -0.56, R * 0.11);
+    dot(-0.24, -0.74, R * 0.055);
+  }
   g.restore();
-  g.drawImage(cut, cx - fx, cy - fy);
-  return { url: out.toDataURL("image/png"), aspect: out.width / out.height };
+  g.drawImage(cut, c - fx, c - fy);
+  return { url: border ? out.toDataURL("image/png") : "", aspect: 1, canvas: out };
 }
 
 /**
@@ -447,7 +566,15 @@ export const EVENT_STICKERS: Partial<Record<MomentKind, EventStyle>> = {
   met: { text: () => "NICE TO MEET YOU", bg: palette.teal, fg: palette.cream }, // lettering until it has art
   "your-turn": { text: (m) => `YOUR TURN · ${m.n ?? 5} MIN`, bg: palette.tomato, fg: palette.cream, art: yourTurnArt },
   shipped: { text: () => "SHIPPED!!", bg: palette.tomato, fg: palette.cream, art: shippedArt },
-  error: { text: () => "OOPS!!", bg: palette.tomato, fg: palette.cream, art: oopsArt },
+  error: {
+    text: () => "OOPS!!",
+    bg: palette.tomato,
+    fg: palette.cream,
+    // Drawn in code since 21 Oct (art/stickers/oops.svg kept for reference); made on first use.
+    get art() {
+      return letterSticker("OOPS!!", [palette.tomato, palette.mustard, palette.teal, palette.cream, palette.teal, palette.mustard], "error").url;
+    },
+  },
   "context-full": { text: () => "CONTEXT FULL", bg: palette.cream, fg: palette.tomato, art: contextFullArt },
   yolo: { text: () => "YOLO MODE", bg: palette.mustard, fg: palette.ink, art: yoloModeArt },
   plan: { text: () => "PLAN MODE", bg: palette.teal, fg: palette.cream, art: planModeArt },
