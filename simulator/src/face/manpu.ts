@@ -78,11 +78,12 @@ function magnifier({ g, f, tk, t, k }: Ctx) {
   const x = r.cx + drift * r.rx * 0.45;
   const y = r.cy + r.ry * tk.lensY;
   g.magnify(x, y, R, tk.lensZoom);
-  // Rim and handle (no glare: the eye's own shines show through; face review, 21 Oct).
-  g.fillArc(x, y, R, R + tk.lensRim, 0, 360, palette.line);
+  // Rim and handle in water blue, like the "?" and the drop (no glare: the eye's own
+  // shines show through; face review, 21 Oct).
+  g.fillArc(x, y, R, R + tk.lensRim, 0, 360, palette.water);
   const hx = x + (R + tk.lensRim) * 0.7;
   const hy = y + (R + tk.lensRim) * 0.7;
-  g.drawWideLine(hx, hy, hx + R * 0.75, hy + R * 0.75, tk.lensRim * 1.1, palette.line);
+  g.drawWideLine(hx, hy, hx + R * 0.75, hy + R * 0.75, tk.lensRim * 1.1, palette.water);
 }
 
 /** Polyline stroke through points: anti-aliased drawWideLine segments on the robot too. */

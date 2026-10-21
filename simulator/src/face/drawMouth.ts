@@ -74,15 +74,31 @@ export function drawMouth(g: Gfx, f: AnimatedFace, tk: FaceTokens, now: number) 
     }
     case "blep": {
       // The tongue out of one side of a smile (face review, 21 Oct); tongueSide
-      // picks the corner. The tongue first, so the smile's line runs over its root.
+      // picks the corner. It hangs tilted 7° outwards; it's drawn reaching up past
+      // the smile, then everything above the smile line is trimmed back to the
+      // face, so its top follows the line exactly (no corner above it, no gap).
+      const side = tk.tongueSide || 1;
       const R = w * 0.82;
       const cy = y - w * 0.5;
-      const tx = x + w * 0.34 * (tk.tongueSide || 1);
+      const tx = x + w * 0.3 * side;
       const ty = cy + Math.sqrt(R * R - (tx - x) ** 2);
-      const tw = w * 0.44;
-      g.fillRect(tx - tw, ty - r, tw * 2, tw * 0.9 + r, palette.tomato);
-      g.fillCircle(tx, ty + tw * 0.9, tw, palette.tomato);
-      g.drawWideLine(tx, ty, tx, ty + tw * 1.25, r * 0.45, c);
+      const tw = w * 0.42;
+      const a = (-7 * side * Math.PI) / 180;
+      const rot = (px: number, py: number): [number, number] => [tx + px * Math.cos(a) - py * Math.sin(a), ty + px * Math.sin(a) + py * Math.cos(a)];
+      const up = tw * 0.8; // how far above the smile it reaches before the trim
+      const len = tw * 1.05;
+      g.fillPolygon([rot(-tw, -up), rot(tw, -up), rot(tw, len), rot(-tw, len)], palette.tomato);
+      g.fillCircle(...rot(0, len), tw, palette.tomato);
+      // The trim: the face colour over everything above the smile, across the tongue.
+      const edge = R * Math.cos((22 * Math.PI) / 180);
+      const pts: [number, number][] = [];
+      for (let i = 0; i <= 12; i++) {
+        const xx = Math.max(x - edge, Math.min(x + edge, tx - tw * 1.4 + (tw * 2.8 * i) / 12));
+        pts.push([xx, cy + Math.sqrt(R * R - (xx - x) ** 2)]);
+      }
+      const roof = ty - up - tw;
+      g.fillPolygon([...pts, [pts[12][0], roof], [pts[0][0], roof]], palette.face);
+      g.drawWideLine(...rot(0, 0), ...rot(0, len + tw * 0.35), r * 0.45, c);
       arc(x, cy, R, 22, 158);
       return;
     }

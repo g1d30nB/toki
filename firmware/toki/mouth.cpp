@@ -147,14 +147,34 @@ void drawMouth(M5Canvas& g, const AnimatedFace& f, const Tokens& tk, uint32_t no
     }
     case Mouth::Blep: {
       // The tongue out of one side of a smile (face review, 21 Oct); tongueSide picks
-      // the corner. The tongue first, so the smile's line runs over its root.
+      // the corner. It hangs tilted 7° outwards, drawn reaching up past the smile;
+      // then everything above the smile line is trimmed back to the face, so its top
+      // follows the line exactly. Port of drawMouth.ts.
+      const float side = tk.tongueSide != 0 ? tk.tongueSide : 1;
       const float R = w * 0.82f, cy = y - w * 0.5f;
-      const float tx = x + w * 0.34f * (tk.tongueSide != 0 ? tk.tongueSide : 1);
+      const float tx = x + w * 0.3f * side;
       const float ty = cy + sqrtf(R * R - (tx - x) * (tx - x));
-      const float tw = w * 0.44f;
-      g.fillRect(ri(tx - tw), ri(ty - r), ri(tw * 2), ri(tw * 0.9f + r), kTomato);
-      g.fillCircle(ri(tx), ri(ty + tw * 0.9f), ri(tw), kTomato);
-      line(tx, ty, tx, ty + tw * 1.25f, r * 0.45f, kLine);
+      const float tw = w * 0.42f, up = tw * 0.8f, len = tw * 1.05f;
+      const float a = -7 * side * PI / 180, ca = cosf(a), sa = sinf(a);
+      auto rx = [&](float px, float py) { return tx + px * ca - py * sa; };
+      auto ry = [&](float px, float py) { return ty + px * sa + py * ca; };
+      g.fillTriangle(ri(rx(-tw, -up)), ri(ry(-tw, -up)), ri(rx(tw, -up)), ri(ry(tw, -up)), ri(rx(tw, len)), ri(ry(tw, len)), kTomato);
+      g.fillTriangle(ri(rx(-tw, -up)), ri(ry(-tw, -up)), ri(rx(tw, len)), ri(ry(tw, len)), ri(rx(-tw, len)), ri(ry(-tw, len)), kTomato);
+      g.fillCircle(ri(rx(0, len)), ri(ry(0, len)), ri(tw), kTomato);
+      // The trim: the face colour over everything above the smile, across the tongue.
+      const float edge = R * cosf(22 * PI / 180), roof = ty - up - tw;
+      float px = 0, py = 0;
+      for (int i = 0; i <= 12; i++) {
+        const float xx = fmaxf(x - edge, fminf(x + edge, tx - tw * 1.4f + tw * 2.8f * i / 12));
+        const float yy = cy + sqrtf(R * R - (xx - x) * (xx - x));
+        if (i) {
+          g.fillTriangle(ri(px), ri(py), ri(xx), ri(yy), ri(xx), ri(roof), kFace);
+          g.fillTriangle(ri(px), ri(py), ri(xx), ri(roof), ri(px), ri(roof), kFace);
+        }
+        px = xx;
+        py = yy;
+      }
+      line(rx(0, 0), ry(0, 0), rx(0, len + tw * 0.35f), ry(0, len + tw * 0.35f), r * 0.45f, kLine);
       arc(x, cy, R, 22, 158);
       return;
     }

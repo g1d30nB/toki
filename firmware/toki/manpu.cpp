@@ -117,9 +117,9 @@ void magnifier(Ctx& c) {
     lensDst->fillArc(dst / 2, dst / 2, ri(c.tk.lensR), ri(c.tk.lensR * 1.5f), 0, 360, kLensKey);
     lensDst->pushSprite(&c.g, x - dst / 2, y - dst / 2, kLensKey);
   }
-  c.g.fillArc(x, y, ri(R), ri(R + c.tk.lensRim), 0, 360, kLine);     // rim
+  c.g.fillArc(x, y, ri(R), ri(R + c.tk.lensRim), 0, 360, kWater);     // rim
   const float hx = x + (R + c.tk.lensRim) * 0.7f, hy = y + (R + c.tk.lensRim) * 0.7f;
-  wideLine(c.g, hx, hy, hx + R * 0.75f, hy + R * 0.75f, c.tk.lensRim * 1.1f, kLine);  // handle
+  wideLine(c.g, hx, hy, hx + R * 0.75f, hy + R * 0.75f, c.tk.lensRim * 1.1f, kWater);  // handle
 }
 
 void www(Ctx& c) {

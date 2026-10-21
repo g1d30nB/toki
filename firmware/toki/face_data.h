@@ -207,15 +207,15 @@ constexpr Tokens kTokens = {
   11.0f, // wwwH
   3.0f, // wwwGap
   1.75f, // wwwWeight
-  31.0f, // wwwAbove
+  38.0f, // wwwAbove
   5.0f, // wwwLift
   1500.0f, // wwwWaveMs
   500.0f, // wwwPauseMs
   320.0f, // sweatSlideMs
   20.0f, // zzzSize
-  3.0f, // zzzGrow
-  16.0f, // zzzStep
-  18.0f, // zzzRise
+  2.5f, // zzzGrow
+  20.0f, // zzzStep
+  19.0f, // zzzRise
   3000.0f, // zzzCycleMs
   7.0f, // zzzFirstUp
   2000.0f, // tearMs
@@ -275,7 +275,7 @@ constexpr Tokens kTokens = {
   22.0f, // hintSize
   184.0f, // buttonY
   48.0f, // buttonH
-  204.0f, // labelY
+  209.0f, // labelY
   1200.0f, // labelHoldMs
   220.0f, // labelInMs
   3.0f, // giggleHops
@@ -366,7 +366,7 @@ constexpr Expression kExpressions[] = {
     {-2.0f, 0.0f, 0.0f, 0.8f, -1.0f},
     Mouth::Smile, 0.0f,
     0,
-    1.5f, 1.8f, false, 0.0f,
+    1.5f, 1.8f, false, 6.0f,
     1.0f, false, 0.0f,
   },
   /* think */ {
@@ -448,7 +448,7 @@ constexpr Expression kExpressions[] = {
   },
   /* subagent */ {
     EyeShape::Round, EyeShape::Round, 0, Mouth::O,
-    1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+    1.0f, 1.0f, 0.82f, 0.0f, 0.0f,
     {0.0f, 1.1f}, 0.9f, 1.0f,
     Gaze::Still,
     {5.0f, 4.0f, 0.0f, 1.0f, -1.0f},

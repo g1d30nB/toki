@@ -103,6 +103,7 @@ export const expressions = {
     smile: 0.42,
     pupil: { x: 0, y: 0 },
     gaze: "look-around",
+    slide: 6, // the face a little lower (face review, 21 Oct)
     brows: { y: -2, angle: 0, tilt: 0, len: 0.8 },
     mouth: "smile",
     blinkRate: 1.5,
@@ -127,8 +128,8 @@ export const expressions = {
   // Subagents: spawned mini eyes appear around the face, one per running subagent
   // (drawn by the minis layer, on any face but blocked). This pose shows while
   // Toki has nothing else to do but wait on them. Brows and mouth as before.
-  // Face review (21 Oct): eyes looking down a little, towards the minis.
-  subagent: e({ pupilScale: 0.9, pupil: { x: 0, y: 1.1 }, brows: { y: 5, angle: 4, tilt: 0 }, mouth: "o" }),
+  // Face review (21 Oct): eyes looking down a little, towards the minis, lids a little lowered.
+  subagent: e({ pupilScale: 0.9, open: 0.82, pupil: { x: 0, y: 1.1 }, brows: { y: 5, angle: 4, tilt: 0 }, mouth: "o" }),
   working: e(WORKING),
   // The most different face, readable from across the desk: bigger, round,
   // wide-open eyes, raised brows, "…", slid up above the hint and buttons.
