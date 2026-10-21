@@ -15,10 +15,14 @@ constexpr uint32_t kTomato = 0xe4572e;
 constexpr uint32_t kMustard = 0xf2b134;
 constexpr uint32_t kTeal = 0x2a9d8f;
 constexpr uint32_t kDim = 0x5b6b8c;
+constexpr uint32_t kFace = 0xfbf4e4;
+constexpr uint32_t kLine = 0x1d2b53;
+constexpr uint32_t kShine = 0xffffff;
+constexpr uint32_t kCheek = 0xf4899f;
 
 enum class EyeShape : uint8_t { Round, Arc, Line, Sparkle, Spiral, Star, Sleep };
 enum class Gaze : uint8_t { Still, Scan, Dart, ScrollUp, LookAround, FollowWww };
-enum class Mouth : uint8_t { None, Line, Smile, O, Pout, Tongue, Wobble, Yawn };
+enum class Mouth : uint8_t { None, Line, Smile, O, Pout, Tongue, Wobble, Yawn, Open, Blep, Cat, Shout };
 
 // Manpu are a bitmask: an expression can show several.
 constexpr uint16_t Manpu_Dots = 1u << 0;
@@ -40,6 +44,18 @@ struct Tokens {
   float irisR;
   float pupilR;
   float highlightR;
+  float lineWeight;
+  float shineBig;
+  float shineMid;
+  float shineSmall;
+  float lookTravel;
+  float cheekRx;
+  float cheekRy;
+  float cheekX;
+  float cheekY;
+  float browCurve;
+  float browThick;
+  float lashLen;
   float smileCurve;
   float manpuScale;
   float dotsStepMs;
@@ -151,15 +167,27 @@ struct Tokens {
 };
 
 constexpr Tokens kTokens = {
-  106.0f, // eyeY
-  128.0f, // eyeSpacing
-  36.0f, // eyeRx
-  42.0f, // eyeRy
+  100.0f, // eyeY
+  124.0f, // eyeSpacing
+  32.0f, // eyeRx
+  34.0f, // eyeRy
   6.0f, // outline
-  3.0f, // border
+  0.0f, // border
   27.0f, // irisR
   14.0f, // pupilR
   6.0f, // highlightR
+  2.6f, // lineWeight
+  0.33f, // shineBig
+  0.21f, // shineMid
+  0.13f, // shineSmall
+  7.0f, // lookTravel
+  15.5f, // cheekRx
+  12.0f, // cheekRy
+  31.0f, // cheekX
+  54.0f, // cheekY
+  0.42f, // browCurve
+  6.0f, // browThick
+  17.0f, // lashLen
   2.4f, // smileCurve
   1.5f, // manpuScale
   450.0f, // dotsStepMs
@@ -230,9 +258,9 @@ constexpr Tokens kTokens = {
   120.0f, // manpuInMs
   200.0f, // manpuOutMs
   10.0f, // longTurnMin
-  56.0f, // mouthY
-  26.0f, // mouthWidth
-  2.5f, // mouthWeight
+  50.0f, // mouthY
+  34.0f, // mouthWidth
+  2.6f, // mouthWeight
   0.0f, // mouthX
   1.0f, // tongueSide
   150.0f, // hintY
@@ -255,8 +283,8 @@ constexpr Tokens kTokens = {
   350.0f, // doubleTapMs
   700.0f, // longPressMs
   10.0f, // browGap
-  34.0f, // browLength
-  4.0f, // browWeight
+  24.0f, // browLength
+  2.6f, // browWeight
   5000.0f, // blinkMin
   12000.0f, // blinkMax
   120.0f, // blinkMs
@@ -294,7 +322,7 @@ constexpr StateConfig kStateConfig = {
 };
 
 struct Vec2 { float x, y; };
-struct Brows { float y, angle, tilt, len; };
+struct Brows { float y, angle, tilt, len, curve; };  // curve -1: the browCurve token
 
 struct Expression {
   EyeShape shape;
@@ -311,6 +339,9 @@ struct Expression {
   float blinkRate, blinkSoftness;
   bool busy;
   float slide;
+  float cheeks;  // kawaii pass: pink cheek size, 0 none
+  bool lashes;   // three lashes on closed eyes
+  float lidTilt; // degrees the top lid slants down towards the nose (a scowl)
 };
 
 enum class ExpressionId : uint8_t { Idle, Think, Read, Search, Edit, Run, Test, Web, Subagent, Working, Blocked, Done, Error, Approved, Denied, Asked, Boop, Quiet, CloseAsk, Closed, Sleepy, Night, Count };
@@ -320,223 +351,245 @@ constexpr const char* kExpressionNames[] = { "idle", "think", "read", "search", 
 constexpr Expression kExpressions[] = {
   /* idle */ {
     EyeShape::Round, EyeShape::Round, 0,
-    1.0f, 0.0f, 0.76f, 0.2f, 0.0f,
+    1.0f, 1.0f, 1.0f, 0.42f, 0.0f,
     {0.0f, 0.0f}, 1.0f, 1.0f,
     Gaze::LookAround,
-    {-4.0f, 0.0f, 0.0f, 0.8f},
+    {-2.0f, 0.0f, 0.0f, 0.8f, -1.0f},
     Mouth::Smile, 0.0f,
     0,
     1.5f, 1.8f, false, 0.0f,
+    1.0f, false, 0.0f,
   },
   /* think */ {
     EyeShape::Round, EyeShape::Round, 0,
-    1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {-0.55f, -0.6f}, 1.0f, 1.0f,
     Gaze::Still,
-    {3.0f, -13.0f, 8.0f, 1.0f},
-    Mouth::Line, 0.0f,
+    {3.0f, -13.0f, 8.0f, 1.0f, -1.0f},
+    Mouth::Pout, 0.0f,
     Manpu_Dots,
     1.0f, 1.0f, true, 0.0f,
+    1.0f, false, 0.0f,
   },
   /* read */ {
     EyeShape::Round, EyeShape::Round, 0,
-    1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.1f}, 1.0f, 1.0f,
     Gaze::Scan,
-    {0.0f, -2.0f, 0.0f, 1.0f},
+    {0.0f, -2.0f, 0.0f, 1.0f, -1.0f},
     Mouth::Line, 0.0f,
     0,
     1.0f, 1.0f, true, 0.0f,
+    1.0f, false, 0.0f,
   },
   /* search */ {
     EyeShape::Round, EyeShape::Round, 0,
-    1.0f, 0.0f, 0.75f, 0.0f, 0.35f,
+    1.0f, 1.0f, 0.75f, 0.0f, 0.35f,
     {0.0f, 0.0f}, 0.85f, 1.0f,
     Gaze::Dart,
-    {-3.0f, -10.0f, 0.0f, 1.0f},
+    {-3.0f, -10.0f, 0.0f, 1.0f, -1.0f},
     Mouth::Line, 0.0f,
     Manpu_Magnifier,
     1.0f, 1.0f, true, 0.0f,
+    1.0f, false, 0.0f,
   },
   /* edit */ {
     EyeShape::Round, EyeShape::Round, 0,
-    1.0f, 0.0f, 0.85f, 0.14f, 0.0f,
+    1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.1f, 0.35f}, 1.0f, 1.0f,
     Gaze::Still,
-    {-4.0f, 6.0f, 0.0f, 1.0f},
-    Mouth::Tongue, 0.0f,
+    {-2.0f, 6.0f, 0.0f, 1.0f, -1.0f},
+    Mouth::Blep, 0.0f,
     0,
     1.0f, 1.0f, true, 0.0f,
+    1.0f, false, 0.0f,
   },
   /* run */ {
     EyeShape::Round, EyeShape::Round, 0,
-    1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {-0.2f, -0.65f}, 1.0f, 1.0f,
     Gaze::ScrollUp,
-    {0.0f, -2.0f, 10.0f, 1.0f},
+    {0.0f, -2.0f, 10.0f, 1.0f, -1.0f},
     Mouth::Line, 0.0f,
     0,
     1.0f, 1.0f, true, 0.0f,
+    1.0f, false, 0.0f,
   },
   /* test */ {
     EyeShape::Round, EyeShape::Round, 0,
-    1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    1.0f, 1.0f, 0.85f, 0.0f, 0.0f,
     {0.0f, 0.1f}, 1.0f, 1.0f,
     Gaze::Still,
-    {5.0f, 8.0f, 0.0f, 1.0f},
+    {5.0f, 12.0f, 0.0f, 1.0f, -1.0f},
     Mouth::Wobble, 0.0f,
     Manpu_Sweat,
     0.45f, 1.0f, true, 0.0f,
+    1.0f, false, 0.0f,
   },
   /* web */ {
     EyeShape::Round, EyeShape::Round, 0,
-    1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {1.0f, -1.0f}, 1.0f, 1.0f,
     Gaze::FollowWww,
-    {5.0f, 0.0f, 10.0f, 1.0f},
+    {5.0f, 0.0f, 10.0f, 1.0f, -1.0f},
     Mouth::O, 0.0f,
     Manpu_Www,
     1.0f, 1.0f, true, 0.0f,
+    1.0f, false, 0.0f,
   },
   /* subagent */ {
     EyeShape::Round, EyeShape::Round, 0,
-    1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.0f}, 0.9f, 1.0f,
     Gaze::Still,
-    {5.0f, 4.0f, 0.0f, 1.0f},
+    {5.0f, 4.0f, 0.0f, 1.0f, -1.0f},
     Mouth::O, 0.0f,
     0,
     1.0f, 1.0f, true, 0.0f,
+    1.0f, false, 0.0f,
   },
   /* working */ {
     EyeShape::Round, EyeShape::Round, 0,
-    1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.1f}, 1.0f, 1.0f,
     Gaze::Still,
-    {0.0f, -2.0f, 0.0f, 1.0f},
+    {0.0f, -2.0f, 0.0f, 1.0f, -1.0f},
     Mouth::Line, 0.0f,
     0,
     1.0f, 1.0f, true, 0.0f,
+    1.0f, false, 0.0f,
   },
   /* blocked */ {
     EyeShape::Round, EyeShape::Round, 0,
-    1.06f, 1.0f, 1.0f, 0.0f, 0.0f,
-    {0.0f, -0.25f}, 1.1f, 1.7f,
+    1.18f, 1.0f, 1.0f, 0.0f, 0.0f,
+    {0.0f, -0.25f}, 1.1f, 1.2f,
     Gaze::Still,
-    {1.0f, 8.0f, 0.0f, 1.0f},
+    {4.0f, 8.0f, 0.0f, 1.0f, -1.0f},
     Mouth::None, 0.0f,
     Manpu_Dots,
     1.3f, 1.0f, true, -22.0f,
+    1.0f, false, 0.0f,
   },
   /* done */ {
     EyeShape::Arc, EyeShape::Arc, 0,
-    1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.0f}, 1.0f, 1.0f,
     Gaze::Still,
-    {4.0f, 0.0f, 0.0f, 1.0f},
-    Mouth::Smile, 0.0f,
+    {4.0f, 0.0f, 0.0f, 1.0f, -1.0f},
+    Mouth::Cat, 0.0f,
     Manpu_Sparkles,
     1.0f, 1.0f, false, 0.0f,
+    1.0f, false, 0.0f,
   },
   /* error */ {
-    EyeShape::Line, EyeShape::Spiral, 3000,
-    1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-    {0.0f, 0.0f}, 1.0f, 1.0f,
+    EyeShape::Round, EyeShape::Spiral, 3000,
+    1.0f, 1.0f, 0.82f, 0.0f, 0.0f,
+    {0.0f, 0.2f}, 1.0f, 1.0f,
     Gaze::Still,
-    {-3.0f, -18.0f, 0.0f, 1.0f},
-    Mouth::Pout, 0.0f,
+    {-1.0f, -26.0f, 0.0f, 1.0f, 0.0f},
+    Mouth::Shout, 0.0f,
     0,
     1.0f, 1.0f, true, 0.0f,
+    1.0f, false, 22.0f,
   },
   /* approved */ {
-    EyeShape::Arc, EyeShape::Arc, 0,
-    1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    EyeShape::Line, EyeShape::Line, 0,
+    1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.0f}, 1.0f, 1.0f,
     Gaze::Still,
-    {5.0f, 2.0f, 0.0f, 1.0f},
-    Mouth::Smile, 0.0f,
-    Manpu_Blush,
+    {5.0f, 2.0f, 0.0f, 1.0f, -1.0f},
+    Mouth::Open, 0.0f,
+    0,
     1.0f, 1.0f, false, 0.0f,
+    1.25f, false, 0.0f,
   },
   /* denied */ {
     EyeShape::Round, EyeShape::Round, 0,
-    1.0f, 0.0f, 0.85f, 0.0f, 0.0f,
-    {0.0f, 0.1f}, 1.0f, 1.0f,
+    1.0f, 1.0f, 0.75f, 0.0f, 0.0f,
+    {0.0f, 0.2f}, 1.0f, 1.0f,
     Gaze::Still,
-    {3.0f, 10.0f, 0.0f, 1.0f},
-    Mouth::O, 0.0f,
+    {3.0f, 12.0f, 0.0f, 1.0f, -1.0f},
+    Mouth::Pout, 0.0f,
     0,
     1.0f, 1.0f, true, 0.0f,
+    1.0f, false, 0.0f,
   },
   /* asked */ {
     EyeShape::Round, EyeShape::Round, 0,
-    1.06f, 1.0f, 1.0f, 0.0f, 0.0f,
-    {0.0f, -0.25f}, 1.1f, 1.7f,
+    1.12f, 1.0f, 1.0f, 0.0f, 0.0f,
+    {0.0f, -0.25f}, 1.1f, 1.2f,
     Gaze::Still,
-    {2.0f, 4.0f, 14.0f, 1.0f},
+    {2.0f, 4.0f, 14.0f, 1.0f, -1.0f},
     Mouth::None, 0.0f,
     Manpu_Question,
     1.3f, 1.0f, true, -2.0f,
+    1.0f, false, 0.0f,
   },
   /* boop */ {
-    EyeShape::Arc, EyeShape::Round, 280,
-    1.0f, 0.6f, 1.0f, 0.0f, 0.0f,
+    EyeShape::Line, EyeShape::Round, 280,
+    1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.0f}, 0.85f, 1.0f,
     Gaze::Still,
-    {9.0f, 4.0f, 0.0f, 1.0f},
-    Mouth::Smile, 0.0f,
+    {9.0f, 4.0f, 0.0f, 1.0f, -1.0f},
+    Mouth::Open, 0.0f,
     0,
     1.0f, 1.0f, false, 0.0f,
+    1.25f, false, 0.0f,
   },
   /* quiet */ {
     EyeShape::Sleep, EyeShape::Sleep, 0,
-    1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.0f}, 1.0f, 1.0f,
     Gaze::Still,
-    {-2.0f, 0.0f, 0.0f, 0.85f},
+    {-2.0f, 0.0f, 0.0f, 0.85f, -1.0f},
     Mouth::Smile, 0.0f,
     Manpu_Zzz,
     1.0f, 1.0f, false, 0.0f,
+    1.0f, true, 0.0f,
   },
   /* closeAsk */ {
     EyeShape::Round, EyeShape::Round, 0,
-    1.0f, 0.8f, 1.0f, 0.12f, 0.0f,
-    {0.0f, -0.25f}, 1.05f, 1.5f,
+    1.0f, 1.0f, 1.0f, 0.12f, 0.0f,
+    {0.0f, -0.25f}, 1.05f, 1.15f,
     Gaze::Still,
-    {5.0f, 7.0f, 0.0f, 1.0f},
+    {5.0f, 7.0f, 0.0f, 1.0f, -1.0f},
     Mouth::None, 0.0f,
     0,
     1.0f, 1.0f, false, -22.0f,
+    1.0f, false, 0.0f,
   },
   /* closed */ {
     EyeShape::Star, EyeShape::Star, 0,
-    1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.0f}, 1.0f, 1.0f,
     Gaze::Still,
-    {7.0f, 0.0f, 0.0f, 1.0f},
-    Mouth::Smile, 0.0f,
+    {7.0f, 0.0f, 0.0f, 1.0f, -1.0f},
+    Mouth::Open, 0.0f,
     Manpu_Sparkles,
     1.0f, 1.0f, false, 0.0f,
+    1.2f, false, 0.0f,
   },
   /* sleepy */ {
     EyeShape::Sleep, EyeShape::Sleep, 0,
-    1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.0f}, 1.0f, 1.0f,
     Gaze::Still,
-    {-3.0f, 5.0f, 0.0f, 0.85f},
+    {-3.0f, 5.0f, 0.0f, 0.85f, -1.0f},
     Mouth::Yawn, 0.0f,
     0,
     1.0f, 1.0f, false, 0.0f,
+    1.0f, true, 0.0f,
   },
   /* night */ {
     EyeShape::Sleep, EyeShape::Sleep, 0,
-    1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.0f}, 1.0f, 1.0f,
     Gaze::Still,
-    {-4.0f, 0.0f, 0.0f, 0.8f},
+    {-4.0f, 0.0f, 0.0f, 0.8f, -1.0f},
     Mouth::None, 0.0f,
     0,
     1.0f, 1.0f, false, 96.0f,
+    1.0f, false, 0.0f,
   },
 };
 

@@ -20,8 +20,13 @@ Pose blend(const Pose& a, const Pose& b, float t) {
   p.pupil = {lerp(a.pupil.x, b.pupil.x, t), lerp(a.pupil.y, b.pupil.y, t)};
   p.pupilScale = lerp(a.pupilScale, b.pupilScale, t);
   p.highlight = lerp(a.highlight, b.highlight, t);
+  // Brow arch: -1 means "the browCurve token"; blend through it as that value.
+  const float ca = a.brows.curve < 0 ? kTokens.browCurve : a.brows.curve, cb = b.brows.curve < 0 ? kTokens.browCurve : b.brows.curve;
   p.brows = {lerp(a.brows.y, b.brows.y, t), lerp(a.brows.angle, b.brows.angle, t), lerp(a.brows.tilt, b.brows.tilt, t),
-             lerp(a.brows.len, b.brows.len, t)};
+             lerp(a.brows.len, b.brows.len, t), lerp(ca, cb, t)};
+  p.cheeks = lerp(a.cheeks, b.cheeks, t);
+  p.lidTilt = lerp(a.lidTilt, b.lidTilt, t);
+  p.lashes = t < 0.5f ? a.lashes : b.lashes;
   p.slide = lerp(a.slide, b.slide, t);
   p.mouthShift = lerp(a.mouthShift, b.mouthShift, t);
   // Discrete parts swap at the midpoint, hidden in the squeeze.
@@ -35,7 +40,7 @@ const Expression& expression(ExpressionId id) { return kExpressions[(int)id]; }
 
 Pose poseOf(const Expression& e) {
   return Pose{e.scale, e.roundness, e.open, e.smile, e.squint, e.pupil, e.pupilScale, e.highlight,
-              e.brows, e.slide, e.mouthShift, e.shape, e.mouth};
+              e.brows, e.slide, e.mouthShift, e.shape, e.mouth, e.cheeks, e.lidTilt, e.lashes};
 }
 
 // Small seeded random generator (mulberry32), so motion repeats run to run.
@@ -129,6 +134,9 @@ AnimatedFace FaceAnimator::update(uint32_t now, ExpressionId target, const Token
   f.mouthShift = pose.mouthShift;
   f.stretch = stretch;
   f.offsetY = breath + pose.slide;
+  f.cheeks = pose.cheeks;
+  f.lidTilt = pose.lidTilt;
+  f.lashes = pose.lashes;
   return f;
 }
 

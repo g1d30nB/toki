@@ -75,21 +75,25 @@ bool noMinis(ExpressionId id) {
   }
 }
 
+/** A button where Deny / Allow sit: a pill with a navy outline, like the scrapbook's (kawaii pass). */
+void pill(M5Canvas& g, const Tokens& tk, int x, uint32_t fill) {
+  const int y = (int)tk.buttonY, h = (int)tk.buttonH;
+  g.fillRoundRect(x, y, 148, h, h / 2, kLine);
+  g.fillRoundRect(x + 3, y + 3, 142, h - 6, h / 2 - 3, fill);
+}
+
 /** "Close the day?": the question, then two booth-style buttons where Deny / Allow sit. */
 void drawCloseChrome(M5Canvas& g, const Tokens& tk) {
   useFont(g, Baloo::Bold22);
-  g.setTextColor(kCream);
+  g.setTextColor(kLine);
   g.setTextDatum(top_center);
   g.drawString("Close the day?", 160, (int)tk.hintY);
   const int y = (int)tk.buttonY, h = (int)tk.buttonH;
-  g.fillRoundRect(8, y, 148, h, h / 2, kCream);
-  g.fillRoundRect(11, y + 3, 142, h - 6, h / 2 - 3, kNavy);
-  g.fillRoundRect(164, y, 148, h, h / 2, kCream);
-  g.fillRoundRect(167, y + 3, 142, h - 6, h / 2 - 3, kMustard);
+  pill(g, tk, 8, kFace);
+  pill(g, tk, 164, kMustard);
   g.setTextDatum(middle_center);
   useFont(g, Baloo::Bold28);
   g.drawString("Not yet", 82, y + h / 2);
-  g.setTextColor(kInk);
   g.drawString("Close", 238, y + h / 2);
 }
 
@@ -100,7 +104,7 @@ void drawCloseChrome(M5Canvas& g, const Tokens& tk) {
 void drawLinkLost(M5Canvas& g, const Tokens& tk) {
   const float h = tk.linkH / 2, w = h * 0.55f, x = tk.linkX, y = tk.linkY;
   const float r = fmaxf(1.25f, tk.linkH / 14);
-  const uint32_t rune = mix(kCream, kGround, 0.3f);
+  const uint32_t rune = mix(kLine, kFace, 0.25f);
   // The Bluetooth rune: a spine, and two chevrons crossing it.
   const float px[6] = {x - w, x + w, x, x, x + w, x - w};
   const float py[6] = {y - h / 2, y + h / 2, y + h, y - h, y - h / 2, y + h / 2};
@@ -150,7 +154,7 @@ void drawAlways(M5Canvas& g, float x, float y, uint32_t c, float w = 28) {
  */
 void drawAlwaysChrome(M5Canvas& g, const char* always, const Tokens& tk) {
   useFont(g, Baloo::Bold22);
-  g.setTextColor(kCream);
+  g.setTextColor(kLine);
   g.setTextDatum(top_center);
   char head[72], text[96];
   strncpy(head, always, sizeof head - 1);
@@ -168,13 +172,12 @@ void drawAlwaysChrome(M5Canvas& g, const char* always, const Tokens& tk) {
   snprintf(text, sizeof text, "%s%s%s", head, cut ? "..." : "", tail);
   g.drawString(text, 160, (int)tk.hintY);
   const int y = (int)tk.buttonY, h = (int)tk.buttonH;
-  g.fillRoundRect(8, y, 148, h, h / 2, kCream);
-  g.fillRoundRect(11, y + 3, 142, h - 6, h / 2 - 3, kNavy);
-  g.fillRoundRect(164, y, 148, h, h / 2, kCream);
-  g.fillRoundRect(167, y + 3, 142, h - 6, h / 2 - 3, kTeal);
+  pill(g, tk, 8, kFace);
+  pill(g, tk, 164, kTeal);
   g.setTextDatum(middle_center);
   useFont(g, Baloo::Bold28);
   g.drawString("Cancel", 82, y + h / 2);
+  g.setTextColor(kCream);
   g.drawString("Always", 216, y + h / 2);  // the wider word: left, clear of its loop
   drawAlways(g, 284, y + h / 2, kCream);
 }
@@ -184,7 +187,7 @@ void drawAlwaysChrome(M5Canvas& g, const char* always, const Tokens& tk) {
  * answer, in regular weight so it stays quiet (the spec's 20 px minimum holds).
  */
 void drawQuestionChrome(M5Canvas& g, const FaceInput&, const Tokens& tk) {
-  g.setTextColor(kCream);
+  g.setTextColor(kLine);
   g.setTextDatum(middle_center);
   fitFont(g, "Question for you in Claude", false);
   g.drawString("Question for you in Claude", 160, (int)(tk.buttonY + tk.buttonH / 2));
@@ -200,7 +203,7 @@ void drawApprovalChrome(M5Canvas& g, const FaceInput& in, const Tokens& tk) {
   char label[96];
   snprintf(label, sizeof label, "%s . %s", tool, in.promptHint);
   useFont(g, Baloo::Medium22);
-  g.setTextColor(kCream);
+  g.setTextColor(kLine);
   g.setTextDatum(top_center);
   // Trim to fit the screen, with an ellipsis.
   size_t n = strlen(label);
@@ -210,9 +213,10 @@ void drawApprovalChrome(M5Canvas& g, const FaceInput& in, const Tokens& tk) {
   }
   g.drawString(label, 160, (int)tk.hintY);
   const int y = (int)tk.buttonY, h = (int)tk.buttonH;
-  g.fillRoundRect(8, y, 148, h, h / 2, kTomato);
-  g.fillRoundRect(164, y, 148, h, h / 2, kTeal);
+  pill(g, tk, 8, kTomato);
+  pill(g, tk, 164, kTeal);
   useFont(g, Baloo::Bold28);
+  g.setTextColor(kCream);
   g.setTextDatum(middle_center);
   g.drawString("Deny", 82, y + h / 2);
   // With Always allow on offer, Allow shifts left for the icon ("hold for more").
@@ -246,7 +250,7 @@ void fitFont(M5Canvas& g, const char* s, bool bold) {
 
 void drawSetupChrome(M5Canvas& g, const FaceInput& in) {
   constexpr int kTitleY = 156, kLineY = 190;  // SETUP_TITLE_Y, SETUP_LINE_Y in setup.ts
-  const uint32_t soft = mix(kCream, kGround, 0.25f);
+  const uint32_t soft = mix(kLine, kFace, 0.3f);
   char title[64];
   const char* line = nullptr;
   const char* command = nullptr;
@@ -262,7 +266,7 @@ void drawSetupChrome(M5Canvas& g, const FaceInput& in) {
     case SetupScreen::Calibrate: snprintf(title, sizeof title, "Set my head level"); line = "Gently, facing you"; break;
     case SetupScreen::Calibrated: snprintf(title, sizeof title, "That's home now"); line = "Thank you"; break;
     case SetupScreen::PairCode: {
-      g.setTextColor(kCream);
+      g.setTextColor(kLine);
       g.setTextDatum(top_center);
       fitFont(g, "Type this code on your Mac", false);
       g.drawString("Type this code on your Mac", 160, 112);
@@ -275,7 +279,7 @@ void drawSetupChrome(M5Canvas& g, const FaceInput& in) {
     }
     default: return;
   }
-  g.setTextColor(kCream);
+  g.setTextColor(kLine);
   g.setTextDatum(top_center);
   fitFont(g, title, true);
   g.drawString(title, 160, kTitleY);
@@ -298,7 +302,7 @@ void drawSetupChrome(M5Canvas& g, const FaceInput& in) {
     g.setTextColor(soft);
     g.drawString(line, x0, kLineY);
     useFont(g, big ? Baloo::Bold28 : Baloo::Bold22);
-    g.setTextColor(kCream);
+    g.setTextColor(kLine);
     g.drawString(command, x0 + wl + 8, kLineY);
     return;
   }
@@ -377,8 +381,8 @@ bool FaceRenderer::drawLabel(M5Canvas& g, ExpressionId id, const FaceInput& in, 
     labelAt_ = now;
   }
   const float k = tk.labelInMs > 0 ? fminf(1, (now - labelAt_) / tk.labelInMs) : 1;
-  const uint32_t cream = mix(kGround, kCream, k);
-  const uint32_t soft = mix(kGround, mix(kCream, kGround, 0.3f), k);
+  const uint32_t cream = mix(kFace, kLine, k);  // kawaii pass: navy on the cream screen
+  const uint32_t soft = mix(kFace, mix(kLine, kFace, 0.35f), k);
   const int y = (int)tk.labelY;
 
   useFont(g, Baloo::Bold22);
@@ -415,7 +419,7 @@ bool FaceRenderer::draw(M5Canvas& g, const FaceInput& in, uint32_t now, const To
   const bool setup = in.setup != SetupScreen::None;
   const ExpressionId id = setup ? setupFace(in.setup) : in.expression;
   const bool blocked = id == ExpressionId::Blocked && !setup;
-  g.fillScreen(kGround);
+  g.fillScreen(kFace);  // kawaii pass: a cream screen
   AnimatedFace face = anim_.update(now, id, tk);
   // Setup screens lift the face (and for the pairing code, shrink it) to make room for words.
   if (setup) {
@@ -447,6 +451,8 @@ bool FaceRenderer::draw(M5Canvas& g, const FaceInput& in, uint32_t now, const To
       face.pupilY += ((dy / d) * 0.9f - face.pupilY) * w;
     }
   }
+
+  drawCheeks(g, face, tk);
 
   drawEyes(g, face, tk, now);
   drawMouth(g, face, tk, now);

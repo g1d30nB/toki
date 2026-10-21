@@ -142,15 +142,16 @@ void MiniLayer::draw(M5Canvas& g, uint32_t now, const Tokens& tk, const Eye main
       const float ex = side * (R + tk.miniGap / 2 * at.size) * sx;
       float x, y;
       rot(ex, 0, x, y);
-      g.fillEllipse(ri(x), ri(y), ri(R * sx), ri(fmaxf(1, R * sy * blink)), kMustard);
-      if (blink > 0.5f) g.fillEllipse(ri(x + dx / d * off), ri(y + dy / d * off), ri(pr * sx), ri(pr * sy * blink), kInk);
+      // Kawaii pass: a tiny navy eye with a shine on the side it's looking towards.
+      g.fillEllipse(ri(x), ri(y), ri(R * sx), ri(fmaxf(1, R * sy * blink)), kLine);
+      if (blink > 0.5f) g.fillCircle(ri(x + dx / d * off - R * 0.2f), ri(y + dy / d * off - R * 0.25f), ri(fmaxf(1.5f, pr * 0.75f * sx)), kShine);
       const float by = -R * sy - tk.miniBrowGap;
       const float half = (tk.miniBrowLen / 2) * sx * at.size;
       const float lift = half * sinf(tk.miniBrowAngle * PI / 180);
       float ax, ay, bx, bY;
       rot(ex - side * half, by - lift, ax, ay);
       rot(ex + side * half, by + lift, bx, bY);
-      g.drawWideLine(ri(ax), ri(ay), ri(bx), ri(bY), tk.miniBrowWeight * fminf(sx, 1), kCream);
+      g.drawWideLine(ri(ax), ri(ay), ri(bx), ri(bY), tk.miniBrowWeight * fminf(sx, 1), kLine);
     }
   }
 }

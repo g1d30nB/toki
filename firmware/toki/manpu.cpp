@@ -37,7 +37,7 @@ void dots(Ctx& c) {
     const float p = (phase - (i + 1) * step) / fmaxf(1, c.tk.manpuInMs);
     if (p < 0) continue;
     const float pop = p < 0.7f ? (p / 0.7f) * 1.15f : p < 1 ? 1.15f - ((p - 0.7f) / 0.3f) * 0.15f : 1;
-    c.g.fillCircle(ri(160 + (i - 1) * 12 * c.tk.manpuScale), ri(y), ri(4.5f * c.tk.manpuScale * c.k * pop), kCream);
+    c.g.fillCircle(ri(160 + (i - 1) * 12 * c.tk.manpuScale), ri(y), ri(4.5f * c.tk.manpuScale * c.k * pop), kLine);
   }
 }
 
@@ -49,11 +49,11 @@ void sweat(Ctx& c) {
   const float x = r.cx + r.rx + c.tk.outline + 8 * c.tk.manpuScale;
   const float y = r.cy - r.ry * 0.9f - (1 - slide) * 18 + sinf(c.t / 600) * 1.5f;
   const float R = 7 * s;
-  c.g.fillCircle(ri(x), ri(y + R), ri(R + 2), kInk);
-  c.g.fillTriangle(ri(x - R - 1.5f), ri(y + R * 0.7f), ri(x + R + 1.5f), ri(y + R * 0.7f), ri(x), ri(y - R * 1.5f), kInk);
+  c.g.fillCircle(ri(x), ri(y + R), ri(R + 2), kLine);
+  c.g.fillTriangle(ri(x - R - 1.5f), ri(y + R * 0.7f), ri(x + R + 1.5f), ri(y + R * 0.7f), ri(x), ri(y - R * 1.5f), kLine);
   c.g.fillCircle(ri(x), ri(y + R), ri(R), kTeal);
   c.g.fillTriangle(ri(x - R), ri(y + R * 0.75f), ri(x + R), ri(y + R * 0.75f), ri(x), ri(y - R * 1.2f), kTeal);
-  c.g.fillCircle(ri(x - R * 0.35f), ri(y + R * 0.75f), ri(R * 0.28f), kCream);
+  c.g.fillCircle(ri(x - R * 0.35f), ri(y + R * 0.75f), ri(R * 0.28f), kShine);
 }
 
 // --- Magnifier ---------------------------------------------------------------
@@ -105,10 +105,10 @@ void magnifier(Ctx& c) {
     lensDst->fillArc(dst / 2, dst / 2, ri(c.tk.lensR), ri(c.tk.lensR * 1.5f), 0, 360, kLensKey);
     lensDst->pushSprite(&c.g, x - dst / 2, y - dst / 2, kLensKey);
   }
-  c.g.fillArc(x, y, ri(R * 0.62f), ri(R * 0.74f), 200, 250, kCream);  // glare
-  c.g.fillArc(x, y, ri(R), ri(R + c.tk.lensRim), 0, 360, kCream);     // rim
+  c.g.fillArc(x, y, ri(R * 0.62f), ri(R * 0.74f), 200, 250, kShine);  // glare
+  c.g.fillArc(x, y, ri(R), ri(R + c.tk.lensRim), 0, 360, kLine);     // rim
   const float hx = x + (R + c.tk.lensRim) * 0.7f, hy = y + (R + c.tk.lensRim) * 0.7f;
-  wideLine(c.g, hx, hy, hx + R * 0.75f, hy + R * 0.75f, c.tk.lensRim * 1.1f, kCream);  // handle
+  wideLine(c.g, hx, hy, hx + R * 0.75f, hy + R * 0.75f, c.tk.lensRim * 1.1f, kLine);  // handle
 }
 
 void www(Ctx& c) {
@@ -127,7 +127,7 @@ void www(Ctx& c) {
     const float y0 = top - lift;
     const float xs[5] = {x0, x0 + W * 0.25f, x0 + W * 0.5f, x0 + W * 0.75f, x0 + W};
     const float ys[5] = {y0, y0 + H, y0 + H * 0.35f, y0 + H, y0};
-    for (int k = 0; k < 4; k++) wideLine(c.g, xs[k], ys[k], xs[k + 1], ys[k + 1], c.tk.wwwWeight, kCream);
+    for (int k = 0; k < 4; k++) wideLine(c.g, xs[k], ys[k], xs[k + 1], ys[k + 1], c.tk.wwwWeight, kLine);
   }
 }
 
@@ -162,7 +162,7 @@ void sparkles(Ctx& c) {
   const float hold = clamp01((c.t - c.tk.sparkleHoldMs) / c.tk.sparkleFadeMs);
   const float fade = fmaxf(hold, c.leaving);
   if (fade >= 1) return;
-  const uint32_t col = mix(kCream, kGround, fade);
+  const uint32_t col = mix(kMustard, kFace, fade);  // kawaii pass: mustard, to read on cream
   for (int i = 0; i < 3; i++) {
     const float local = c.t - i * c.tk.sparkleStaggerMs;
     if (local <= 0) continue;
@@ -196,7 +196,7 @@ void zzz(Ctx& c) {
     // FreeSans bold at two sizes stands in for the simulator's 20 to 29 px.
     c.g.setFont(i < 2 ? &fonts::FreeSansBold12pt7b : &fonts::FreeSansBold18pt7b);
     c.g.setTextSize(i == 3 ? 1.15f : 1.0f);
-    c.g.setTextColor(mix(kCream, kGround, fmaxf(1 - p, fade)));
+    c.g.setTextColor(mix(kLine, kFace, fmaxf(1 - p, fade)));
     const float x = 320 - 12 - c.tk.zzzStep * (3 - i);
     const float y = 12 + c.tk.zzzRise * (3 - i) + sinf(c.t / 700 + i) * 1.5f;
     c.g.drawString(i == 0 ? "z" : "Z", ri(x), ri(y));
@@ -213,7 +213,7 @@ void question(Ctx& c) {
   const float top = left.cy - left.ry - c.tk.outline - c.tk.border;
   const float R = 17 * fminf(1.1f, c.k);
   const float y = fmaxf(10 + R, top - c.tk.dotsGap - 6 + sinf(c.t / 500) * 1.5f);
-  c.g.fillCircle(160, ri(y), ri(R + 2.5f), kCream);
+  c.g.fillCircle(160, ri(y), ri(R + 2.5f), kLine);
   c.g.fillCircle(160, ri(y), ri(R), kTeal);
   c.g.setFont(&fonts::FreeSansBold12pt7b);
   c.g.setTextColor(kCream);
@@ -234,11 +234,11 @@ void wifiMark(Ctx& c, bool on) {
   const float top = r.cy - r.ry - c.tk.outline - c.tk.border - c.tk.wwwAbove;
   const int cx = 320 - 12 - 24, cy = ri(fmaxf(12 + 26, top + 18));
   const int lit = on ? 3 : ((int)(c.t / 420)) % 4;
-  const uint32_t dim = mix(kCream, kGround, 0.7f);
-  c.g.fillCircle(cx, cy, ri(3.2f * c.k), kCream);
+  const uint32_t dim = mix(kLine, kFace, 0.75f);
+  c.g.fillCircle(cx, cy, ri(3.2f * c.k), kLine);
   for (int i = 0; i < 3; i++) {
     const float rr = (8 + i * 6.5f) * c.k;
-    c.g.fillArc(cx, cy, ri(rr), ri(rr + 3.6f * c.k), 225, 315, i < lit ? kCream : dim);
+    c.g.fillArc(cx, cy, ri(rr), ri(rr + 3.6f * c.k), 225, 315, i < lit ? kLine : dim);
   }
 }
 void wifi(Ctx& c) { wifiMark(c, false); }

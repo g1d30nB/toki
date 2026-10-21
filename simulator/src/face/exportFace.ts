@@ -10,7 +10,7 @@ import { defaultTokens } from "./tokens";
 
 const SHAPES = ["round", "arc", "line", "sparkle", "spiral", "star", "sleep"] as const;
 const GAZES = ["still", "scan", "dart", "scroll-up", "look-around", "follow-www"] as const;
-const MOUTHS = ["none", "line", "smile", "o", "pout", "tongue", "wobble", "yawn"] as const;
+const MOUTHS = ["none", "line", "smile", "o", "pout", "tongue", "wobble", "yawn", "open", "blep", "cat", "shout"] as const;
 const MANPU: ManpuKind[] = ["dots", "sweat", "magnifier", "www", "sparkles", "blush", "zzz", "question"];
 
 const camel = (s: string) => s.replace(/-(\w)/g, (_, c: string) => c.toUpperCase());
@@ -30,10 +30,11 @@ function expressionLiteral(id: string, e: Expression) {
     `    ${num(e.scale)}, ${num(e.roundness)}, ${num(e.open)}, ${num(e.smile)}, ${num(e.squint)},`,
     `    {${num(e.pupil.x)}, ${num(e.pupil.y)}}, ${num(e.pupilScale)}, ${num(e.highlight)},`,
     `    Gaze::${pascal(e.gaze)},`,
-    `    {${num(e.brows.y)}, ${num(e.brows.angle)}, ${num(e.brows.tilt)}, ${num(e.brows.len ?? 1)}},`,
+    `    {${num(e.brows.y)}, ${num(e.brows.angle)}, ${num(e.brows.tilt)}, ${num(e.brows.len ?? 1)}, ${num(e.brows.curve ?? -1)}},`,
     `    Mouth::${pascal(e.mouth)}, ${num(e.mouthShift)},`,
     `    ${manpu},`,
     `    ${num(e.blinkRate)}, ${num(e.blinkSoftness)}, ${e.busy}, ${num(e.slide)},`,
+    `    ${num(e.cheeks)}, ${e.lashes}, ${num(e.lidTilt)},`,
     `  },`,
   ].join("\n");
 }
@@ -81,7 +82,7 @@ export function exportFaceHeader(): string {
     "};",
     "",
     "struct Vec2 { float x, y; };",
-    "struct Brows { float y, angle, tilt, len; };",
+    "struct Brows { float y, angle, tilt, len, curve; };  // curve -1: the browCurve token",
     "",
     "struct Expression {",
     "  EyeShape shape;",
@@ -98,6 +99,9 @@ export function exportFaceHeader(): string {
     "  float blinkRate, blinkSoftness;",
     "  bool busy;",
     "  float slide;",
+    "  float cheeks;  // kawaii pass: pink cheek size, 0 none",
+    "  bool lashes;   // three lashes on closed eyes",
+    "  float lidTilt; // degrees the top lid slants down towards the nose (a scowl)",
     "};",
     "",
     `enum class ExpressionId : uint8_t { ${expressionIds.map(pascal).join(", ")}, Count };`,

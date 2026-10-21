@@ -1,6 +1,8 @@
-// Port of simulator/src/face/drawEyes.ts. Hybrid edges (decided 3 Oct): filled
-// shapes are plain (aliased) M5GFX primitives; lines are drawWideLine, which
-// M5GFX anti-aliases.
+// Port of simulator/src/face/drawEyes.ts, kawaii pass (Gideon, 21 Oct): dark
+// features on a cream screen. An open eye is a solid navy disc with white shines
+// (three while it's fully round, two once a lid narrows it) and no separate pupil:
+// looking moves the whole eye. Closed eyes are thin, even lines. Hybrid edges
+// (decided 3 Oct): filled shapes are plain primitives; lines are drawWideLine.
 #include <math.h>
 
 #include "face.h"
@@ -15,9 +17,9 @@ void wideLine(M5Canvas& g, float x0, float y0, float x1, float y1, float r, uint
   g.drawWideLine(ri(x0), ri(y0), ri(x1), ri(y1), r, c);
 }
 
-/** Where a straight lid line crosses the eye's ellipse grown by `outer`, if it does. */
-bool chord(const Eye& e, float outer, float y0, float slope, float& u0, float& u1) {
-  const float A = e.rx + outer, B = e.ry + outer, d = y0 - e.cy;
+/** Where a straight line crosses the eye's ellipse, if it does. */
+bool chord(const Eye& e, float y0, float slope, float& u0, float& u1) {
+  const float A = e.rx, B = e.ry, d = y0 - e.cy;
   const float a = 1 / (A * A) + (slope * slope) / (B * B);
   const float b = (2 * d * slope) / (B * B);
   const float c = (d * d) / (B * B) - 1;
@@ -29,32 +31,26 @@ bool chord(const Eye& e, float outer, float y0, float slope, float& u0, float& u
   return true;
 }
 
-/** Lid edge: cover one side of the line with ground, then redraw it as linework. */
+/** A lid: cover one side of a straight line with the screen, then draw the line across the eye. */
 void lid(M5Canvas& g, const Eye& e, const Tokens& tk, float y0, float slope, bool coverAbove) {
-  const float outer = tk.outline + tk.border;
-  const float left = e.cx - e.rx - outer - 1, top = e.cy - e.ry - outer - 1;
-  const float w = (e.rx + outer + 1) * 2, h = (e.ry + outer + 1) * 2;
+  const float left = e.cx - e.rx - 2, top = e.cy - e.ry - 2;
+  const float w = (e.rx + 2) * 2, h = (e.ry + 2) * 2;
   auto yAt = [&](float x) { return y0 + slope * (x - e.cx); };
-
   g.setClipRect(ri(left), ri(top), ri(w), ri(h));
   const float yl = yAt(left), yr = yAt(left + w);
   if (coverAbove) {
-    g.fillRect(ri(left), ri(top), ri(w), ri(fmaxf(0, fminf(yl, yr) - top)), kGround);
-    g.fillTriangle(ri(left), ri(fminf(yl, yr)), ri(left + w), ri(fminf(yl, yr)), ri(yl < yr ? left + w : left), ri(fmaxf(yl, yr)), kGround);
+    g.fillRect(ri(left), ri(top), ri(w), ri(fmaxf(0, fminf(yl, yr) - top)), kFace);
+    g.fillTriangle(ri(left), ri(fminf(yl, yr)), ri(left + w), ri(fminf(yl, yr)), ri(yl < yr ? left + w : left), ri(fmaxf(yl, yr)), kFace);
   } else {
     const float bottom = top + h;
-    g.fillRect(ri(left), ri(fmaxf(yl, yr)), ri(w), ri(fmaxf(0, bottom - fmaxf(yl, yr))), kGround);
-    g.fillTriangle(ri(left), ri(fmaxf(yl, yr)), ri(left + w), ri(fmaxf(yl, yr)), ri(yl > yr ? left + w : left), ri(fminf(yl, yr)), kGround);
+    g.fillRect(ri(left), ri(fmaxf(yl, yr)), ri(w), ri(fmaxf(0, bottom - fmaxf(yl, yr))), kFace);
+    g.fillTriangle(ri(left), ri(fmaxf(yl, yr)), ri(left + w), ri(fmaxf(yl, yr)), ri(yl > yr ? left + w : left), ri(fminf(yl, yr)), kFace);
   }
   g.clearClipRect();
-
   float u0, u1;
-  if (!chord(e, tk.outline / 2, y0, slope, u0, u1)) return;
-  const float x0 = e.cx + u0, x1 = e.cx + u1;
-  // The cream border sits only on the covered side, never across the iris.
-  const float shift = (coverAbove ? -1 : 1) * (tk.border / 2);
-  wideLine(g, x0, yAt(x0) + shift, x1, yAt(x1) + shift, tk.outline / 2 + tk.border / 2, kCream);
-  wideLine(g, x0, yAt(x0), x1, yAt(x1), tk.outline / 2, kInk);
+  if (!chord(e, y0, slope, u0, u1)) return;
+  const float x0 = e.cx + u0 - tk.lineWeight, x1 = e.cx + u1 + tk.lineWeight;
+  wideLine(g, x0, yAt(x0), x1, yAt(x1), tk.lineWeight, kLine);
 }
 
 /**
@@ -92,129 +88,168 @@ void fillEllipseInsideCircle(M5Canvas& g, const Eye& e, float A, float B, float 
   }
 }
 
-/** Smiling lower lid: the bottom of the eye itself takes a gentle upward curve. */
+/** Smiling eyes: the bottom of the eye is cut away by an upward curve. */
 void smileLid(M5Canvas& g, const Eye& e, const Tokens& tk, float amount) {
-  const float o = tk.outline, bd = tk.border;
   const float R = e.rx * tk.smileCurve;
   const float topY = e.cy + e.ry - amount * e.ry * 2;
-  const float cy0 = topY + R;
-  fillEllipseInsideCircle(g, e, e.rx + o, e.ry + o, e.cx, cy0, R, kInk);
-  fillEllipseInsideCircle(g, e, e.rx + o + bd, e.ry + o + bd, e.cx, cy0, R - o, kCream);
-  fillEllipseInsideCircle(g, e, e.rx + o + bd + 1, e.ry + o + bd + 1, e.cx, cy0, R - o - bd, kGround);
+  fillEllipseInsideCircle(g, e, e.rx + 1, e.ry + 1, e.cx, topY + R, R, kFace);
+}
+
+/** A four-point star with concave sides, filled as a fan from its centre. */
+void fillStar(M5Canvas& g, float x, float y, float R, float concave, uint32_t c, float* outX = nullptr, float* outY = nullptr) {
+  constexpr int n = 32;
+  const float ex = 2 / concave;
+  float px[n], py[n];
+  for (int i = 0; i < n; i++) {
+    const float a = ((float)i / n) * PI * 2, co = cosf(a), s = sinf(a);
+    px[i] = x + copysignf(powf(fabsf(co), ex), co) * R;
+    py[i] = y + copysignf(powf(fabsf(s), ex), s) * R;
+    if (outX) {
+      outX[i] = px[i];
+      outY[i] = py[i];
+    }
+  }
+  for (int i = 0; i < n; i++) g.fillTriangle(ri(x), ri(y), ri(px[i]), ri(py[i]), ri(px[(i + 1) % n]), ri(py[(i + 1) % n]), c);
 }
 
 void closedEye(M5Canvas& g, const Eye& e, const Tokens& tk) {
   const float y = e.cy + e.ry * 0.2f;
-  wideLine(g, e.cx - e.rx, y, e.cx + e.rx, y, tk.outline / 2 + tk.border, kCream);
-  wideLine(g, e.cx - e.rx, y, e.cx + e.rx, y, tk.outline / 2, kInk);
+  wideLine(g, e.cx - e.rx * 0.8f, y, e.cx + e.rx * 0.8f, y, tk.lineWeight, kLine);
 }
 
-void eyeRings(M5Canvas& g, const Eye& e, const Tokens& tk) {
-  g.fillEllipse(ri(e.cx), ri(e.cy), ri(e.rx + tk.outline + tk.border), ri(e.ry + tk.outline + tk.border), kCream);
-  g.fillEllipse(ri(e.cx), ri(e.cy), ri(e.rx + tk.outline), ri(e.ry + tk.outline), kInk);
-  g.fillEllipse(ri(e.cx), ri(e.cy), ri(e.rx), ri(e.ry), kCream);
-}
-
-void roundEye(M5Canvas& g, const Eye& e, const AnimatedFace& f, const Tokens& tk, bool sparkle) {
+void roundEye(M5Canvas& g, const Eye& base, const AnimatedFace& f, const Tokens& tk, bool sparkle) {
   const float open = fminf(f.open, 1);
-  if (open < 0.08f) return closedEye(g, e, tk);
-  eyeRings(g, e, tk);
+  if (open < 0.08f) return closedEye(g, base, tk);
+  // No separate pupil: looking moves the whole eye a little.
+  Eye e = base;
+  e.cx += f.pupilX * tk.lookTravel + f.saccadeX;
+  e.cy += f.pupilY * tk.lookTravel + f.saccadeY;
+  g.fillEllipse(ri(e.cx), ri(e.cy), ri(e.rx), ri(e.ry), kLine);
 
-  // Iris and pupil, kept inside the eye.
-  const float ir = tk.irisR * f.pupilScale * fminf(1, e.rx / tk.eyeRx);
-  const float travelX = fmaxf(0, e.rx - ir - 3), travelY = fmaxf(0, e.ry - ir - 3);
-  const float ix = e.cx + f.pupilX * travelX + f.saccadeX;
-  const float iy = e.cy + f.pupilY * travelY + f.saccadeY;
-  g.fillCircle(ri(ix), ri(iy), ri(ir), kMustard);
-  g.fillCircle(ri(ix), ri(iy), ri(fmaxf(2, ir * (tk.pupilR / tk.irisR))), kInk);
-  const float hr = tk.highlightR * f.highlight;
-  g.fillCircle(ri(ix - ir * 0.36f), ri(iy - ir * 0.4f), ri(hr), kCream);
-  g.fillCircle(ri(ix + ir * 0.34f), ri(iy + ir * 0.34f), ri(hr * 0.45f), kCream);
-  if (sparkle) {
-    // A four-point star in the highlight: reserved for success moments.
-    const float sx = ix - ir * 0.36f, sy = iy - ir * 0.4f, L = tk.highlightR * 2.2f, w = tk.highlightR * 0.55f;
-    g.fillTriangle(ri(sx - L), ri(sy), ri(sx + L), ri(sy), ri(sx), ri(sy - w), kCream);
-    g.fillTriangle(ri(sx - L), ri(sy), ri(sx + L), ri(sy), ri(sx), ri(sy + w), kCream);
-    g.fillTriangle(ri(sx), ri(sy - L), ri(sx), ri(sy + L), ri(sx - w), ri(sy), kCream);
-    g.fillTriangle(ri(sx), ri(sy - L), ri(sx), ri(sy + L), ri(sx + w), ri(sy), kCream);
+  // The shines: big top left, medium right, small low in the middle while the eye
+  // is fully round; once narrowed, two side by side in the part still showing.
+  const float r = fminf(e.rx, e.ry);
+  const float glossy = fminf(1.3f, f.highlight);
+  const bool narrowed = open < 0.99f || f.smile > 0.01f || f.squint > 0.01f || fabsf(f.lidTilt) > 0.5f;
+  float big = r * tk.shineBig * f.highlight;
+  float bx = e.cx - e.rx * 0.15f, by = e.cy - e.ry * 0.22f;
+  float sx = e.cx + e.rx * 0.04f, sy = e.cy + e.ry * 0.5f;
+  if (narrowed) {
+    const float top = open < 0.99f ? e.cy - e.ry + (1 - open) * e.ry * 2 * 0.6f : e.cy - e.ry;
+    float bottom = e.cy + e.ry;
+    if (f.smile > 0.01f) bottom = fminf(bottom, e.cy + e.ry - f.smile * e.ry * 2);
+    if (f.squint > 0.01f) bottom = fminf(bottom, e.cy + e.ry - f.squint * e.ry);
+    const float mid = (top + bottom) / 2, h = bottom - top;
+    big = fminf(big, h * 0.3f);
+    by = mid - h * 0.06f;
+    sx = e.cx + e.rx * 0.38f;
+    sy = mid + h * 0.12f;
   }
+  if (sparkle) fillStar(g, bx, by, big * 1.5f, 0.7f, kShine);  // success: the big shine is a star
+  else g.fillCircle(ri(bx), ri(by), ri(big), kShine);
+  if (!narrowed) g.fillCircle(ri(e.cx + e.rx * 0.5f), ri(e.cy + e.ry * 0.14f), ri(r * tk.shineMid * glossy), kShine);
+  g.fillCircle(ri(sx), ri(sy), ri(fmaxf(1, r * tk.shineSmall * glossy)), kShine);
 
-  // Top lid: level; it only opens and closes.
-  if (open < 0.99f) lid(g, e, tk, e.cy - e.ry + (1 - open) * e.ry * 2 * 0.6f, 0, true);
+  // Top lid: opens and closes, and slants down towards the nose for a scowl.
+  if (open < 0.99f || fabsf(f.lidTilt) > 0.5f)
+    lid(g, e, tk, e.cy - e.ry + (1 - open) * e.ry * 2 * 0.6f, -e.side * tanf(f.lidTilt * PI / 180), true);
   if (f.smile > 0.01f) smileLid(g, e, tk, f.smile);
   if (f.squint > 0.01f) lid(g, e, tk, e.cy + e.ry - f.squint * e.ry, 0, false);
 }
 
+/** Draws an arc of a circle as one even line; degrees clockwise from the right (y down). */
+void arcLine(M5Canvas& g, float cx, float cy, float r, float from, float to, float weight) {
+  const int n = 16;
+  float px = cx + cosf(from * PI / 180) * r, py = cy + sinf(from * PI / 180) * r;
+  for (int i = 1; i <= n; i++) {
+    const float a = (from + (to - from) * i / n) * PI / 180;
+    const float nx = cx + cosf(a) * r, ny = cy + sinf(a) * r;
+    wideLine(g, px, py, nx, ny, weight, kLine);
+    px = nx;
+    py = ny;
+  }
+}
+
 void spiralEye(M5Canvas& g, const Eye& e, const Tokens& tk, uint32_t now) {
-  eyeRings(g, e, tk);
   const float turns = 2.5f;
   const int steps = 40;
   const float spin = (now / 160.0f) * e.side;
   float px = e.cx, py = e.cy;
   for (int i = 1; i <= steps; i++) {
     const float a = ((float)i / steps) * turns * PI * 2 + spin;
-    const float rr = ((float)i / steps) * 0.82f;
+    const float rr = ((float)i / steps) * 0.9f;
     const float x = e.cx + cosf(a) * e.rx * rr, y = e.cy + sinf(a) * e.ry * rr;
-    wideLine(g, px, py, x, y, tk.outline / 2, kInk);
+    wideLine(g, px, py, x, y, tk.lineWeight, kLine);
     px = x;
     py = y;
   }
 }
 
+/** Happy arcs: ^ ^ (done). */
 void arcEye(M5Canvas& g, const Eye& e, const Tokens& tk) {
-  const float cy = e.cy + e.ry * 0.45f, r = e.rx, t = tk.outline + 4;
-  g.fillArc(ri(e.cx), ri(cy), ri(r - t / 2 - tk.border), ri(r + t / 2 + tk.border), 200, 340, kCream);
-  g.fillArc(ri(e.cx), ri(cy), ri(r - t / 2), ri(r + t / 2), 202, 338, kInk);
+  arcLine(g, e.cx, e.cy + e.ry * 0.35f, e.rx * 0.78f, 200, 340, tk.lineWeight * 1.15f);
 }
 
-/** Content closed eyes: a downward curve, like a sleeping smile (quiet, sleepy, night). */
-void sleepEye(M5Canvas& g, const Eye& e, const Tokens& tk) {
-  const float r = e.rx * 0.85f, cy = e.cy - e.ry * 0.3f, t = tk.outline + 2;
-  g.fillArc(ri(e.cx), ri(cy), ri(r - t / 2 - tk.border), ri(r + t / 2 + tk.border), 22, 158, kCream);
-  g.fillArc(ri(e.cx), ri(cy), ri(r - t / 2), ri(r + t / 2), 24, 156, kInk);
+/** Content closed eyes: a downward curve (quiet, sleepy, night), with three lashes when content. */
+void sleepEye(M5Canvas& g, const Eye& e, const Tokens& tk, bool lashes) {
+  const float r = e.rx * 0.8f, cy = e.cy - e.ry * 0.15f;
+  arcLine(g, e.cx, cy, r, 20, 160, tk.lineWeight * 1.15f);
+  if (!lashes) return;
+  for (int k = 0; k < 3; k++) {
+    // From just inside the end of the curve, fanning outwards: down-out, out, up-out.
+    const float along = (e.side == 1 ? 24 - k * 4 : 156 + k * 4) * PI / 180;
+    const float ox = e.cx + cosf(along) * r, oy = cy + sinf(along) * r;
+    const float up = (-30 + k * 36) * PI / 180;
+    const float L = tk.lashLen * (1 - k * 0.08f);
+    wideLine(g, ox, oy, ox + e.side * cosf(up) * L, oy - sinf(up) * L, tk.lineWeight * 0.85f, kLine);
+  }
 }
 
-/**
- * Star eyes (day closed, earned): the eye becomes a mustard four-point star with
- * concave sides, the same navy outline and cream border as the round eye, and one
- * highlight. Filled as a triangle fan; the outline is drawWideLine segments.
- */
+/** Star eyes (day closed, earned): a mustard four-point star, outlined, with one shine. */
 void starEye(M5Canvas& g, const Eye& e, const Tokens& tk) {
-  const float R = e.ry * 1.05f, ex = 2 / tk.sparkleConcave;
+  const float R = e.ry * 1.05f;
   constexpr int n = 32;
   float px[n], py[n];
-  for (int i = 0; i < n; i++) {
-    const float a = ((float)i / n) * PI * 2, c = cosf(a), s = sinf(a);
-    px[i] = e.cx + copysignf(powf(fabsf(c), ex), c) * R;
-    py[i] = e.cy + copysignf(powf(fabsf(s), ex), s) * R;
-  }
-  for (int i = 0; i < n; i++) wideLine(g, px[i], py[i], px[(i + 1) % n], py[(i + 1) % n], tk.outline / 2 + tk.border, kCream);
-  for (int i = 0; i < n; i++) {
-    const int j = (i + 1) % n;
-    g.fillTriangle(ri(e.cx), ri(e.cy), ri(px[i]), ri(py[i]), ri(px[j]), ri(py[j]), kMustard);
-  }
-  for (int i = 0; i < n; i++) wideLine(g, px[i], py[i], px[(i + 1) % n], py[(i + 1) % n], tk.outline / 2, kInk);
-  g.fillCircle(ri(e.cx - R * 0.16f), ri(e.cy - R * 0.18f), ri(tk.highlightR * 0.9f), kCream);
+  fillStar(g, e.cx, e.cy, R, tk.sparkleConcave, kMustard, px, py);
+  for (int i = 0; i < n; i++) wideLine(g, px[i], py[i], px[(i + 1) % n], py[(i + 1) % n], tk.lineWeight, kLine);
+  g.fillCircle(ri(e.cx + R * 0.16f), ri(e.cy - R * 0.18f), ri(R * 0.14f), kShine);
 }
 
+/** The squeeze: > < (approved, boop). */
 void chevronEye(M5Canvas& g, const Eye& e, const Tokens& tk) {
-  const float dx = e.rx * 0.75f * -e.side, h = e.ry * 0.55f;
+  const float dx = e.rx * 0.75f * -e.side, h = e.ry * 0.5f;
   const float tipX = e.cx + dx * 0.6f, backX = e.cx - dx * 0.6f;
-  const float radii[2] = {tk.outline / 2 + tk.border, tk.outline / 2};
-  const uint32_t colours[2] = {kCream, kInk};
-  for (int i = 0; i < 2; i++) {
-    wideLine(g, backX, e.cy - h, tipX, e.cy, radii[i], colours[i]);
-    wideLine(g, tipX, e.cy, backX, e.cy + h, radii[i], colours[i]);
-  }
+  const float r = tk.lineWeight * 1.25f;
+  wideLine(g, backX, e.cy - h, tipX, e.cy, r, kLine);
+  wideLine(g, tipX, e.cy, backX, e.cy + h, r, kLine);
 }
 
+/** Brows: a filled crescent above each eye, thick in the middle, tapering to points. */
 void brow(M5Canvas& g, const Eye& e, const AnimatedFace& f, const Tokens& tk) {
-  const float a = ((f.brows.angle + (e.side == 1 ? f.brows.tilt : 0)) * PI) / 180;
-  const float y = e.cy - e.ry - tk.outline - tk.border - tk.browGap - f.brows.y;
   const float half = (tk.browLength * f.brows.len) / 2;
-  const float ix = e.cx - e.side * half * cosf(a), iy = y - half * sinf(a);
-  const float ox = e.cx + e.side * half * cosf(a), oy = y + half * sinf(a);
-  wideLine(g, ix, iy, ox, oy, tk.browWeight, kCream);
+  if (half < 1) return;
+  const float a = ((f.brows.angle + (e.side == 1 ? f.brows.tilt : 0)) * PI) / 180;
+  const float y = e.cy - e.ry - tk.browGap - f.brows.y;
+  const float sag = (f.brows.curve < 0 ? tk.browCurve : f.brows.curve) * half;
+  const float ca = cosf(a), sa = sinf(a);
+  float tx0 = 0, ty0 = 0, bx0 = 0, by0 = 0;
+  for (int i = 0; i <= 16; i++) {
+    const float u = -1 + (2.0f * i) / 16;
+    const float lx = u * half;
+    const float mid = -sag * (1 - u * u);
+    const float t = (tk.browThick / 2) * powf(1 - u * u, 0.7f) + 0.6f;
+    const float x = e.cx + e.side * lx * ca;
+    const float tx = x, ty = y + mid - t + lx * sa;
+    const float bx = x, by = y + mid + t + lx * sa;
+    if (i > 0) {
+      g.fillTriangle(ri(tx0), ri(ty0), ri(tx), ri(ty), ri(bx0), ri(by0), kLine);
+      g.fillTriangle(ri(tx), ri(ty), ri(bx), ri(by), ri(bx0), ri(by0), kLine);
+    }
+    tx0 = tx;
+    ty0 = ty;
+    bx0 = bx;
+    by0 = by;
+  }
 }
 
 }  // namespace
@@ -229,6 +264,14 @@ void eyeLayout(const AnimatedFace& f, const Tokens& tk, Eye out[2]) {
   }
 }
 
+void drawCheeks(M5Canvas& g, const AnimatedFace& f, const Tokens& tk) {
+  if (f.cheeks <= 0.01f) return;
+  Eye eyes[2];
+  eyeLayout(f, tk, eyes);
+  for (const Eye& e : eyes)
+    g.fillEllipse(ri(e.cx + e.side * tk.cheekX), ri(e.cy + tk.cheekY * fminf(1.15f, f.scale)), ri(tk.cheekRx * f.cheeks), ri(tk.cheekRy * f.cheeks), kCheek);
+}
+
 void drawEyes(M5Canvas& g, const AnimatedFace& f, const Tokens& tk, uint32_t now) {
   Eye eyes[2];
   eyeLayout(f, tk, eyes);
@@ -238,7 +281,7 @@ void drawEyes(M5Canvas& g, const AnimatedFace& f, const Tokens& tk, uint32_t now
       case EyeShape::Spiral: spiralEye(g, e, tk, now); break;
       case EyeShape::Arc: arcEye(g, e, tk); break;
       case EyeShape::Line: chevronEye(g, e, tk); break;
-      case EyeShape::Sleep: sleepEye(g, e, tk); break;
+      case EyeShape::Sleep: sleepEye(g, e, tk, f.lashes); break;
       case EyeShape::Star: starEye(g, e, tk); break;
       default: roundEye(g, e, f, tk, f.shape == EyeShape::Sparkle); break;
     }

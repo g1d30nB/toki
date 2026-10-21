@@ -23,6 +23,8 @@ struct Pose {
   float slide, mouthShift;
   EyeShape shape;
   Mouth mouth;
+  float cheeks, lidTilt;  // kawaii pass
+  bool lashes;
 };
 
 struct AnimatedFace {
@@ -38,6 +40,9 @@ struct AnimatedFace {
   float mouthShift;
   float stretch;  // squash and stretch on expression change: 1 = rest
   float offsetY;  // breathing plus slide, px
+  float cheeks;   // kawaii pass: pink cheek size, 0 none
+  float lidTilt;  // degrees the top lid slants down towards the nose (a scowl)
+  bool lashes;    // three lashes on closed eyes
 };
 
 // Eases between expressions and layers blinks, saccades, gaze loops and
@@ -82,6 +87,7 @@ Pose poseOf(const Expression& e);
 
 void eyeLayout(const AnimatedFace& f, const Tokens& tk, Eye out[2]);
 void drawEyes(M5Canvas& g, const AnimatedFace& f, const Tokens& tk, uint32_t now);
+void drawCheeks(M5Canvas& g, const AnimatedFace& f, const Tokens& tk);
 void drawMouth(M5Canvas& g, const AnimatedFace& f, const Tokens& tk, uint32_t now);
 
 }  // namespace toki
