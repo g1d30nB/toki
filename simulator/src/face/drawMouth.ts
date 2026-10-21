@@ -53,7 +53,7 @@ export function drawMouth(g: Gfx, f: AnimatedFace, tk: FaceTokens, now: number) 
       return;
     }
     case "open": {
-      // An open smile: a D on its back, navy inside, a tomato tongue at the bottom.
+      // An open smile: a D on its back, navy inside, the tongue at the bottom.
       const top = y - w * 0.3;
       const half = w * 1.05;
       const depth = w * 1.3;
@@ -63,7 +63,13 @@ export function drawMouth(g: Gfx, f: AnimatedFace, tk: FaceTokens, now: number) 
         pts.push([x + Math.cos(a) * half, top + Math.sin(a) * depth]);
       }
       g.fillPolygon(pts, c);
-      g.fillEllipse(x, top + depth * 0.72, half * 0.55, depth * 0.24, palette.tomato);
+      const span = (yy: number): Span | null => {
+        const t = (yy - top) / depth;
+        if (t < 0 || t > 1) return null;
+        const hw = half * Math.sqrt(1 - t * t);
+        return [x - hw, x + hw];
+      };
+      tongue(g, x, top + depth * 0.5, top + depth, half * 0.62, span, r);
       return;
     }
     case "blep": {
@@ -72,24 +78,30 @@ export function drawMouth(g: Gfx, f: AnimatedFace, tk: FaceTokens, now: number) 
       const tw = w * 0.42;
       g.fillRect(x - tw, y, tw * 2, tw * 0.9, palette.tomato);
       g.fillCircle(x, y + tw * 0.9, tw, palette.tomato);
-      g.drawWideLine(x, y + r, x, y + tw * 1.2, r * 0.5, mixLine());
+      g.drawWideLine(x, y + r, x, y + tw * 1.2, r * 0.5, groove);
       return;
     }
     case "shout": {
       // Cross or shocked: an open mouth, wider at the bottom, a tongue inside.
-      const tw = w * 0.5;
-      const bw = w * 0.75;
-      const h = w * 1.1;
-      g.fillPolygon(
-        [
-          [x - tw, y - h * 0.4],
-          [x + tw, y - h * 0.4],
-          [x + bw, y + h * 0.6],
-          [x - bw, y + h * 0.6],
-        ],
-        c,
-      );
-      g.fillEllipse(x, y + h * 0.45, bw * 0.6, h * 0.18, palette.tomato);
+      const tw = w * 0.45;
+      const bw = w * 0.8;
+      const h = w * 1.45;
+      const quad: [number, number][] = [
+        [x - tw, y - h * 0.4],
+        [x + tw, y - h * 0.4],
+        [x + bw, y + h * 0.6],
+        [x - bw, y + h * 0.6],
+      ];
+      g.fillPolygon(quad, c);
+      // Rounded corners, as in the reference: the edge stroked with a round pen.
+      for (let i = 0; i < 4; i++) g.drawWideLine(quad[i][0], quad[i][1], quad[(i + 1) % 4][0], quad[(i + 1) % 4][1], r, c);
+      const span = (yy: number): Span | null => {
+        const t = (yy - (y - h * 0.4)) / h;
+        if (t < 0 || t > 1) return null;
+        const hw = tw + (bw - tw) * t + r * 0.5;
+        return [x - hw, x + hw];
+      };
+      tongue(g, x, y + h * 0.6 - h * 0.52, y + h * 0.6 + r * 0.5, bw * 0.68, span, r);
       return;
     }
     case "tongue": {
@@ -102,8 +114,16 @@ export function drawMouth(g: Gfx, f: AnimatedFace, tk: FaceTokens, now: number) 
     case "yawn": {
       // A big, slow yawn: a tall oval that opens and closes once every 2.4 s.
       const open = 0.55 + 0.45 * Math.sin(Math.min(1, (now % 2_400) / 1_600) * Math.PI);
-      g.fillEllipse(x, y + 6, w * 0.7, w * 1.1 * open, c);
-      g.fillEllipse(x, y + 6 + w * 0.6 * open, w * 0.45, Math.max(1, w * 0.3 * open), palette.tomato);
+      const rx = w * 0.7;
+      const ry = w * 1.1 * open;
+      g.fillEllipse(x, y + 6, rx, ry, c);
+      const span = (yy: number): Span | null => {
+        const t = (yy - (y + 6)) / ry;
+        if (Math.abs(t) > 1) return null;
+        const hw = rx * Math.sqrt(1 - t * t);
+        return [x - hw, x + hw];
+      };
+      tongue(g, x, y + 6 + ry * 0.25, y + 6 + ry, rx * 0.62, span, r);
       return;
     }
     case "wobble": {
@@ -124,4 +144,69 @@ export function drawMouth(g: Gfx, f: AnimatedFace, tk: FaceTokens, now: number) 
 }
 
 /** The groove down the middle of the tongue: a darker tomato. */
-const mixLine = () => "#b8401f";
+const groove = "#b8401f";
+
+/** A horizontal run of pixels: left and right x. */
+type Span = [number, number];
+
+/**
+ * A tongue inside an open mouth (Gideon, 21 Oct: a properly shaped tongue, not an
+ * ellipse): two rounded humps on top with a notch between them, a groove down the
+ * middle, and a body that fills the bottom of the mouth, following its outline.
+ * Drawn as thin horizontal slices from `top` to `bottom`, each the tongue's width
+ * at that height cut to the mouth's (`mouth`, less `inset` so a rim of the mouth
+ * stays). The robot draws the same slices with fillTriangle.
+ */
+function tongue(
+  g: Gfx,
+  cx: number,
+  top: number,
+  bottom: number,
+  half: number,
+  mouth: (y: number) => Span | null,
+  inset: number,
+) {
+  const rr = half * 0.56; // each hump's radius; the humps overlap, leaving a shallow notch
+  const d = half - rr;
+  const spansAt = (y: number): Span[] => {
+    const m = mouth(y);
+    if (!m) return [];
+    const l = m[0] + inset;
+    const r = m[1] - inset;
+    let parts: Span[] = [[-Infinity, Infinity]];
+    const dy = y - (top + rr);
+    if (dy < 0) {
+      const hw = Math.sqrt(Math.max(0, rr * rr - dy * dy));
+      parts = [
+        [cx - d - hw, cx - d + hw],
+        [cx + d - hw, cx + d + hw],
+      ];
+      if (parts[0][1] >= parts[1][0]) parts = [[parts[0][0], parts[1][1]]];
+    }
+    return parts.map(([a, b]): Span => [Math.max(a, l), Math.min(b, r)]).filter(([a, b]) => b > a);
+  };
+  const step = 1;
+  let prevY = top;
+  let prev = spansAt(top);
+  for (let y = top + step; y < bottom + step; y += step) {
+    const yy = Math.min(y, bottom);
+    const cur = spansAt(yy);
+    if (cur.length === prev.length) {
+      cur.forEach((s, i) =>
+        g.fillPolygon(
+          [
+            [prev[i][0], prevY],
+            [prev[i][1], prevY],
+            [s[1], yy],
+            [s[0], yy],
+          ],
+          palette.tomato,
+        ),
+      );
+    } else prev.forEach((s) => g.fillRect(s[0], prevY, s[1] - s[0], yy - prevY, palette.tomato));
+    prev = cur;
+    prevY = yy;
+  }
+  // The groove: from just under the notch, a little over half way down.
+  g.drawWideLine(cx, top + rr * 0.55, cx, top + (bottom - top) * 0.55, Math.max(0.8, half * 0.07), groove);
+}
