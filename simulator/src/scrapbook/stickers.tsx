@@ -190,11 +190,11 @@ const BORDER = 13;
  * Three kinds of round face sticker (Gideon's references, 21 Oct), so a page of them
  * feels varied; each face always gets the same kind:
  * - soft: a strong shadow crescent down the right, a curved gloss streak (the crown)
- * - rim: a crescent in the lower right: a pale band and a second navy line
+ * - cool: the soft kind's shadow in pale blue, two round gloss dots
  * - bubble: a clean body with two round gloss dots, big and small
  */
-type RoundKind = "soft" | "rim" | "bubble";
-const ROUND_KINDS: RoundKind[] = ["soft", "rim", "bubble"];
+type RoundKind = "soft" | "cool" | "bubble";
+const ROUND_KINDS: RoundKind[] = ["soft", "cool", "bubble"];
 // In turn down the list of faces, so each kind gets a third of them.
 const kindOfFace = (face: string): RoundKind => ROUND_KINDS[Math.max(0, expressionIds.indexOf(face as ExpressionId)) % 3];
 
@@ -247,31 +247,11 @@ function mochi(cut: HTMLCanvasElement, kind: RoundKind, border = true): { url: s
     g.arc(c, c, R * 0.78, Math.PI * 1.13, Math.PI * 1.36);
     g.stroke();
     dot(-0.3, -0.8, R * 0.035);
-  } else if (kind === "rim") {
-    // A crescent in the lower right (Gideon, 21 Oct): a band 14% of the radius at
-    // its thickest, at 45°, tapering to nothing 50° either side (100° of the rim, under
-    // a third). Its inner edge is part of a bigger circle set up and to the left,
-    // solved so it crosses the outline exactly there; the line along it is as thick
-    // as the outline, and the clip trims its ends into the outline.
-    const t = R * 0.14;
-    const span = (50 * Math.PI) / 180;
-    const d = (2 * R * t - t * t) / (2 * (R - t - R * Math.cos(span)));
-    const r = R + d - t;
-    const ux = Math.SQRT1_2;
-    const uy = Math.SQRT1_2;
-    const ix = c - d * ux;
-    const iy = c - d * uy;
-    disc(R, mix(palette.face, palette.water, 0.24));
-    g.fillStyle = palette.face;
-    g.beginPath();
-    g.arc(ix, iy, r, 0, Math.PI * 2);
-    g.fill();
-    const end = (k: number) => Math.atan2(c + R * Math.sin(Math.PI / 4 + k * span) - iy, c + R * Math.cos(Math.PI / 4 + k * span) - ix);
-    g.strokeStyle = palette.line;
-    g.lineWidth = OUTLINE;
-    g.beginPath();
-    g.arc(ix, iy, r, end(-1), end(1));
-    g.stroke();
+  } else if (kind === "cool") {
+    // The soft kind's shadow in a pale blue (Gideon, 21 Oct: the crescent didn't work),
+    // with two round gloss dots, so the three kinds differ at a glance.
+    disc(R, mix(palette.face, palette.water, 0.3));
+    disc(R * 0.94, palette.face, -R * 0.12, -R * 0.09);
     dot(-0.5, -0.55, R * 0.09);
     dot(-0.3, -0.72, R * 0.045);
   } else {
