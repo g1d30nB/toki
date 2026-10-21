@@ -3,19 +3,6 @@ import type { ExpressionId } from "../face/expressions";
 import { mix, palette } from "../face/palette";
 import type { Moment, MomentKind } from "../state/moments";
 // The real stickers (art/: all rights reserved, see art/LICENSE).
-import alwaysArt from "../../../art/stickers/always.svg?url";
-import closedArt from "../../../art/stickers/closed.svg?url";
-import contextFullArt from "../../../art/stickers/context-full.svg?url";
-import helloArt from "../../../art/stickers/hello-world.svg?url";
-import leaveMeAloneArt from "../../../art/stickers/leave-me-alone.svg?url";
-import nopeArt from "../../../art/stickers/nope.svg?url";
-import planModeArt from "../../../art/stickers/plan-mode.svg?url";
-import questionArt from "../../../art/stickers/question.svg?url";
-import shippedArt from "../../../art/stickers/shipped.svg?url";
-import subagentsArt from "../../../art/stickers/subagents.svg?url";
-import yoloModeArt from "../../../art/stickers/yolo-mode.svg?url";
-import yourTurnArt from "../../../art/stickers/your-turn.svg?url";
-import zzzArt from "../../../art/stickers/zzz.svg?url";
 
 // Stickers (spec §9.4). Three kinds, for variety with meaning (Gideon, 3 Oct):
 // - Face stickers: Toki's real face, for moments with character (long turns,
@@ -112,22 +99,36 @@ export function letterSticker(text: string, colours: string[], face?: string): {
   const pen = 17; // the navy outline round the letters
   const m = document.createElement("canvas").getContext("2d")!;
   m.font = font;
-  const widths = [...text].map((ch) => m.measureText(ch).width);
+  // Lines (split at "\n"), each centred under the widest; Toki to the right of them all.
   const kern = -6;
-  const head = face ? 150 : 0;
-  const W = widths.reduce((a, w) => a + w + kern, 0) + head + 200;
-  const H = size * 1.6 + 120;
+  const lineH = size * 1.02;
+  const lines = text.split("\n").map((t) => {
+    // Spaces wide enough to survive the fat outline.
+    const widths = [...t].map((ch) => (ch === " " ? size * 0.38 : m.measureText(ch).width));
+    return { t, widths, w: widths.reduce((a, w) => a + w + kern, 0) - kern };
+  });
+  const block = Math.max(...lines.map((l) => l.w));
+  const d = face ? (lines.length > 1 ? 230 : 190) : 0; // Toki's head
+  const W = block + (face ? d - 4 : 0) + 200;
+  const H = lines.length * lineH + size * 0.35 + 200;
   const c = document.createElement("canvas");
   c.width = Math.ceil(W);
   c.height = Math.ceil(H);
   const g = c.getContext("2d")!;
-  const base = H / 2 + size * 0.36;
-  // Each letter's place: a little bounce and tilt, the same every time.
-  let x = 100;
-  const placed = [...text].map((ch, i) => {
-    const p = { ch, x: x + widths[i] / 2, y: base + [0, -10, 4, -6, 8, -4][i % 6], tilt: [-0.07, 0.05, -0.03, 0.06, -0.05, 0.04][i % 6], colour: colours[i % colours.length] };
-    x += widths[i] + kern;
-    return p;
+  // Each letter's place: a little bounce and tilt, the same every time; colours run
+  // through the letters, skipping spaces.
+  const placed: { ch: string; x: number; y: number; w: number; tilt: number; colour: string }[] = [];
+  let n = 0;
+  lines.forEach((l, k) => {
+    let x = 100 + (block - l.w) / 2;
+    const base = 100 + size * 0.8 + k * lineH;
+    [...l.t].forEach((ch, i) => {
+      if (ch !== " ") {
+        placed.push({ ch, x: x + l.widths[i] / 2, y: base + [0, -10, 4, -6, 8, -4][n % 6], w: l.widths[i], tilt: [-0.07, 0.05, -0.03, 0.06, -0.05, 0.04][n % 6], colour: colours[n % colours.length] });
+        n++;
+      }
+      x += l.widths[i] + kern;
+    });
   });
   const at = (p: (typeof placed)[number], draw: (gg: CanvasRenderingContext2D) => void, gg = g) => {
     gg.save();
@@ -164,8 +165,7 @@ export function letterSticker(text: string, colours: string[], face?: string): {
     lg.fillStyle = "rgba(255,255,255,0.85)";
     lg.beginPath();
     // On the top-left shoulder, rotated with the letter.
-    const w = widths[placed.indexOf(p)];
-    const gx = -w * 0.3;
+    const gx = -p.w * 0.3;
     const gy = -size * 0.58;
     lg.ellipse(p.x + gx * Math.cos(p.tilt) - gy * Math.sin(p.tilt), p.y + gx * Math.sin(p.tilt) + gy * Math.cos(p.tilt), size * 0.045, size * 0.085, 0.55 + p.tilt, 0, Math.PI * 2);
     lg.fill();
@@ -174,8 +174,8 @@ export function letterSticker(text: string, colours: string[], face?: string): {
   // Toki, small, against the end of the word.
   if (face) {
     const { canvas: h } = mochi(faceCut(face), kindOfFace(face), false);
-    const d = 190;
-    g.drawImage(h, x - 14, base - d * 0.8, d, d);
+    const mid = 100 + (lines.length * lineH) / 2 + size * 0.12;
+    g.drawImage(h, 100 + block - 12, mid - d / 2, d, d);
   }
   const result = dieCut(c, 0, 20);
   letterCache.set(key, result);
@@ -557,39 +557,45 @@ export const KIND_SYMBOL: Record<string, SymbolKind> = {
   research: "www",
 };
 
-/** `art`: the real sticker (art/stickers, step 5.5); without it, lettering stands in. */
-type EventStyle = { text: (m: Moment) => string; bg: string; fg: string; art?: string };
+/**
+ * `art`: the sticker, drawn on first use. Since 21 Oct every lettered sticker is
+ * drawn in code (letterSticker), each with Toki's face for the moment; the generated
+ * art from step 5.5 stays in art/stickers for reference.
+ */
+type EventStyle = { text: (m: Moment) => string; bg: string; fg: string; art?: () => { url: string; aspect: number } };
 
-// The catalogue's wording where it fits (spec §9.4). Placeholders: lettering only.
+const { tomato: T, mustard: M, teal: E, cream: C, water: B } = palette;
+const drawn = (text: string, colours: string[], face?: string) => () => letterSticker(text, colours, face);
+
+// The catalogue's wording where it fits (spec §9.4).
 export const EVENT_STICKERS: Partial<Record<MomentKind, EventStyle>> = {
-  hello: { text: () => "HELLO WORLD", bg: palette.mustard, fg: palette.ink, art: helloArt },
-  met: { text: () => "NICE TO MEET YOU", bg: palette.teal, fg: palette.cream }, // lettering until it has art
-  "your-turn": { text: (m) => `YOUR TURN · ${m.n ?? 5} MIN`, bg: palette.tomato, fg: palette.cream, art: yourTurnArt },
-  shipped: { text: () => "SHIPPED!!", bg: palette.tomato, fg: palette.cream, art: shippedArt },
-  error: {
-    text: () => "OOPS!!",
-    bg: palette.tomato,
-    fg: palette.cream,
-    // Drawn in code since 21 Oct (art/stickers/oops.svg kept for reference); made on first use.
-    get art() {
-      return letterSticker("OOPS!!", [palette.tomato, palette.mustard, palette.teal, palette.cream, palette.teal, palette.mustard], "error").url;
-    },
-  },
-  "context-full": { text: () => "CONTEXT FULL", bg: palette.cream, fg: palette.tomato, art: contextFullArt },
-  yolo: { text: () => "YOLO MODE", bg: palette.mustard, fg: palette.ink, art: yoloModeArt },
-  plan: { text: () => "PLAN MODE", bg: palette.teal, fg: palette.cream, art: planModeArt },
-  quiet: { text: () => "LEAVE ME ALONE!!", bg: palette.cream, fg: palette.ink, art: leaveMeAloneArt },
-  closed: { text: (m) => (m.detail === "earned" ? "CLOSED" : "zzz"), bg: palette.tomato, fg: palette.cream, art: closedArt },
-  subagents: { text: (m) => `SUBAGENTS ×${m.n ?? 1}`, bg: palette.teal, fg: palette.cream, art: subagentsArt },
-  denied: { text: () => "NOPE!", bg: palette.cream, fg: palette.tomato, art: nopeArt },
-  always: { text: () => "ALWAYS", bg: palette.teal, fg: palette.cream, art: alwaysArt },
-  question: { text: () => "?", bg: palette.teal, fg: palette.cream, art: questionArt },
+  hello: { text: () => "HELLO WORLD", bg: M, fg: palette.ink, art: drawn("HELLO\nWORLD", [T, M, E, B, C], "boop") },
+  met: { text: () => "NICE TO MEET YOU", bg: E, fg: C, art: drawn("NICE TO\nMEET YOU!", [E, M, T, C], "done") },
+  "your-turn": { text: (m) => `YOUR TURN · ${m.n ?? 5} MIN`, bg: T, fg: C, art: drawn("YOUR\nTURN!!", [T, M, E, C], "blocked") },
+  shipped: { text: () => "SHIPPED!!", bg: T, fg: C, art: drawn("SHIPPED!!", [T, M, E, C, B], "closed") },
+  error: { text: () => "OOPS!!", bg: T, fg: C, art: drawn("OOPS!!", [T, M, E, C, E, M], "error") },
+  "context-full": { text: () => "CONTEXT FULL", bg: C, fg: T, art: drawn("CONTEXT\nFULL!", [C, T, M, E], "test") },
+  yolo: { text: () => "YOLO MODE", bg: M, fg: palette.ink, art: drawn("YOLO\nMODE", [M, T, E, C], "edit") },
+  plan: { text: () => "PLAN MODE", bg: E, fg: C, art: drawn("PLAN\nMODE", [E, C, M, B], "think") },
+  quiet: { text: () => "LEAVE ME ALONE!!", bg: C, fg: palette.ink, art: drawn("LEAVE ME\nALONE!!", [B, C, M, T], "quiet") },
+  closed: { text: (m) => (m.detail === "earned" ? "CLOSED" : "zzz"), bg: T, fg: C, art: drawn("CLOSED", [T, M, E, C], "approved") },
+  subagents: { text: (m) => `SUBAGENTS ×${m.n ?? 1}`, bg: E, fg: C, art: drawn("SUBAGENTS", [E, M, T, C], "subagent") },
+  denied: { text: () => "NOPE!", bg: C, fg: T, art: drawn("NOPE!", [T, M, E, C], "denied") },
+  always: { text: () => "ALWAYS", bg: E, fg: C, art: drawn("ALWAYS", [E, M, T, B, C], "idle") },
+  question: { text: () => "?", bg: E, fg: C, art: drawn("?", [B]) },
 };
 
-/** How big a moment's sticker is, in page units (1000 wide): events loud, routine work small. */
 /** The quiet close (the day closed itself, or without much done) gets zzz, not CLOSED. */
-export const QUIET_CLOSE_ART = zzzArt;
+export const QUIET_CLOSE_ART = drawn("Zzz", [B, C, B], "sleepy");
 
+/** A drawn event sticker's width over height, or undefined where there's no canvas (tests). */
+export function eventAspect(m: Moment): number | undefined {
+  const ev = EVENT_STICKERS[m.kind];
+  if (!ev?.art || typeof document === "undefined") return undefined;
+  return (m.kind === "closed" && m.detail !== "earned" ? QUIET_CLOSE_ART : ev.art)().aspect;
+}
+
+/** How big a moment's sticker is, in page units (1000 wide): events loud, routine work small. */
 export function stickerSize(m: Moment): number {
   if (EVENT_STICKERS[m.kind]) return 1;
   switch (m.kind) {

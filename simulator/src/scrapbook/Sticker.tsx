@@ -41,7 +41,7 @@ export function StickerArt({ m, w, style, still, pinnable = true, finish }: { m:
         };
   const ev = EVENT_STICKERS[m.kind];
   if (ev?.art) {
-    const art = m.kind === "closed" && m.detail !== "earned" ? QUIET_CLOSE_ART : ev.art;
+    const art = m.kind === "closed" && m.detail !== "earned" ? QUIET_CLOSE_ART().url : ev.art().url;
     // SUBAGENTS carries its count on a small badge: the art can't know it.
     const count = m.kind === "subagents" && (m.n ?? 1) > 1 ? m.n : null;
     if (finish)

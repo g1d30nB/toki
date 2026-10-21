@@ -3,7 +3,7 @@
 // each day running down the page from morning to evening, hour by hour).
 
 import type { Moment } from "../state/moments";
-import { ACTIVITY_SYMBOL, EVENT_STICKERS, KIND_SYMBOL, stickerSize, type SymbolKind } from "./stickers";
+import { ACTIVITY_SYMBOL, EVENT_STICKERS, KIND_SYMBOL, eventAspect, stickerSize, type SymbolKind } from "./stickers";
 
 const TURN_FACE: Record<string, string> = { other: "working" };
 
@@ -107,11 +107,14 @@ export function sizeOf(m: Moment): number {
 export const FACE_PX = 150;
 export const SYMBOL_PX = 105;
 export const ART_PX = 190;
-// Taller art is narrower, so every sticker carries about the same weight.
+// Taller art is narrower, so every sticker carries about the same weight: the drawn
+// stickers (21 Oct) keep the area of a 4:3 one, so a one-line word runs wider.
 const ART_SCALE: Partial<Record<string, number>> = { question: 0.5, closed: 0.85, quiet: 0.8 };
 
 export function widthPx(m: Moment, s: number): number {
   const ev = EVENT_STICKERS[m.kind];
+  const aspect = eventAspect(m);
+  if (ev?.art && aspect) return ART_PX * s * Math.sqrt(aspect / (4 / 3)) * (m.kind === "question" ? 0.6 : 1);
   if (ev?.art) return ART_PX * s * (m.kind === "closed" && m.detail !== "earned" ? 0.7 : (ART_SCALE[m.kind] ?? 1));
   if (ev) return ev.text(m).length * 15 * s + 30;
   return (lookOf(m).type === "symbol" ? SYMBOL_PX : FACE_PX) * s;
@@ -184,10 +187,12 @@ export function newestFirst(bands: Band[]): Band[] {
 
 export type Placed = { m: Moment; x: number; y: number; r: number; s: number; w: number; z: number };
 
-/** About how tall a sticker draws at width `w` (the art is 4:3, the "?" square). */
+/** About how tall a sticker draws at width `w` (drawn art by its own shape; else 4:3, the "?" square). */
 export function heightPx(m: Moment, w: number): number {
   const ev = EVENT_STICKERS[m.kind];
   if (ev && !ev.art) return 44;
+  const aspect = eventAspect(m);
+  if (aspect) return w / aspect;
   if (m.kind === "question") return w;
   return w * 0.75;
 }
