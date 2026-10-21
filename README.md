@@ -1,10 +1,22 @@
 # Toki (時)
 
-A desk robot that shows what your Claude agents are doing, at the edge of your attention. And a scrapbook of your days together, in stickers.
+<p align="center">
+  <img src="docs/images/toki-faces.gif" width="420" alt="Toki's face on its screen, changing as Claude works: idle, reading, on the web, testing, with three subagents, waiting for your OK, approved, an error, a boop, done">
+</p>
 
-Toki runs on an [M5Stack StackChan](https://docs.m5stack.com/en/StackChan) (the K151, built on a CoreS3). It watches Claude Code and the Claude desktop app, and its face changes with what Claude is doing: reading, running a command, on the web, testing. When Claude needs your OK, Toki looks up, glows amber, and you can answer with a tap on its face. You don't need to look at it to know: idle, working and waiting look different even out of the corner of your eye.
+<p align="center"><b>A little desk robot that shows what Claude is up to, out of the corner of your eye.<br>And a sticker scrapbook of your days together.</b></p>
 
-*Toki* is Japanese for time, or a moment, and a pun on tokens.
+Toki lives on an [M5Stack StackChan](https://docs.m5stack.com/en/StackChan) (the K151, built on a CoreS3) and keeps an eye on Claude Code and the Claude desktop app. Its face changes with whatever Claude is doing: reading, running a command, searching the web, sweating over your tests. When Claude needs your OK, Toki looks up at you, glows amber, and you answer with a tap on its face. You don't even have to look: idle, busy and waiting each read differently from the corner of your eye.
+
+*Toki* is Japanese for time, or a moment. It's also a pun on tokens.
+
+## Meet Toki
+
+<p align="center">
+  <img src="docs/images/toki-faces.png" width="760" alt="All 22 of Toki's faces, each named: idle, thinking, reading, searching, editing, running a command, testing, on the web, subagents, working, needs your OK, a question for you, done, something failed, you approved, you denied, boop, quiet mode, close the day, day closed, closed early, night">
+</p>
+
+Every face is drawn live, so it blinks, glances about and breathes, and every one is triggered by something real. Nothing on the screen is random.
 
 ## What it does
 
@@ -16,6 +28,10 @@ Toki runs on an [M5Stack StackChan](https://docs.m5stack.com/en/StackChan) (the 
 
 ## The scrapbook
 
+<p align="center">
+  <img src="docs/images/toki-stickers.png" width="760" alt="A scrapbook page covered in Toki's stickers: SHIPPED!!, OOPS!!, HELLO WORLD, YOLO MODE, NOPE!, LEAVE ME ALONE!!, CONTEXT FULL!, PLAN MODE, YOUR TURN!!, ALWAYS and Zzz, each with Toki's face, plus round face stickers and little symbols for the web, searching, tests, commands and more">
+</p>
+
 A diary of your days with Claude, in stickers. It fills itself as you work. Each day is a notebook page: a sticker for every prompt, sized by how much work it took, and stickers of their own for the moments that matter (a push, an error, a long wait for your OK, the day you close). Zoom out to a month calendar, or the whole year as a quilt of Toki's faces. Your busiest days come out silver or gold, and rare moments holographic.
 
 - **Where:** `http://localhost:4747`, while Toki's bridge runs (it starts when you log in). Or, in Terminal: `toki open`.
@@ -24,7 +40,9 @@ A diary of your days with Claude, in stickers. It fills itself as you work. Each
 
 ## What you need
 
-- An **M5Stack StackChan K151** and its USB-C cable.
+<img src="docs/images/stackchan.jpg" width="200" align="right" alt="The M5Stack StackChan: a small square screen on a two-servo neck and base">
+
+- An **M5Stack StackChan K151** and its USB-C cable. It arrives with a plain face; Toki gives it a new one (and `toki restore` puts the old one back).
 - A **Mac** with [Homebrew](https://brew.sh).
 - The **Claude desktop app** (for Bluetooth, through its Hardware Buddy) and **Claude Code**.
 - **2.4 GHz Wi-Fi** that your Mac shares. The robot can't use 5 GHz.
@@ -78,14 +96,24 @@ Claude app ──────────── Bluetooth (Hardware Buddy) ─�
 - **The robot** runs its own Arduino firmware: the face, touch, servos and LEDs, plus a copy of the state logic so it still works over Bluetooth when the bridge is off.
 - **The face is designed in a browser simulator first,** and the robot's face data is generated from it, so the two never drift apart.
 
+<p align="center">
+  <img src="docs/images/face-lab.png" width="640" alt="The face lab: Toki's idle face in the browser, beside buttons for every expression and the agent state">
+</p>
+
+<img src="docs/images/first-face.jpg" width="220" align="right" alt="An early, dark blue version of Toki's face on the real robot, in front of a laptop running the simulator">
+
+**How it started.** The first face on the glass (3 October), beside the simulator it was designed in: dark blue, ringed amber eyes, a tiny smile. It went kawaii three weeks later, after four rounds of review on the robot itself.
+
+<br clear="right">
+
 | Folder | What |
 |---|---|
 | `firmware/toki/` | the robot's firmware (Arduino, StackChan-BSP / M5Unified) |
 | `firmware/fonts/` | Baloo 2 and the script that turns it into the robot's smooth fonts |
 | `bridge/` | the Mac service and the `toki` command |
 | `simulator/` | the face lab and the scrapbook (Vite, React, TypeScript) |
-| `art/` | the sticker art and the tools that clean it |
-| `docs/` | the design spec, the bridge and setup designs, restoring the factory firmware |
+| `art/` | the first, generated sticker art and its tools (the stickers are drawn in code now) |
+| `docs/` | the design spec, the bridge and setup designs, restoring the factory firmware, and the images on this page |
 | `packaging/` | the release build and the Homebrew formula |
 
 ## Building from source
@@ -111,6 +139,7 @@ Hardware Buddy, in the Claude desktop app, is an unofficial developer feature. I
 
 - **Code:** MIT, see [LICENSE](LICENSE).
 - **Art:** all rights reserved, see [art/LICENSE](art/LICENSE). It ships with the repo so Toki works out of the box, but it may not be reused, remixed or sold.
+- **Images:** the faces and stickers in `docs/images` are Toki's art (all rights reserved, as above); the StackChan photo is M5Stack's.
 - **Baloo 2** by the Baloo 2 Project Authors, SIL Open Font License 1.1 ([firmware/fonts/OFL.txt](firmware/fonts/OFL.txt)).
 - Built on [StackChan-BSP](https://github.com/m5stack/StackChan-BSP), M5Unified and M5GFX by M5Stack, and Anthropic's [claude-desktop-buddy](https://github.com/anthropics/claude-desktop-buddy) (MIT). The hook relay was informed by [Coucou](https://github.com/Louis-CFM/coucou).
 

@@ -42,6 +42,7 @@ docs/claude-code-kickoff.md
 # separate website page
 /scrapbook/
 /Webpage/
+/Webpages/
 
 # Wi-Fi and bridge secrets for the firmware (copy secrets.example.h)
 firmware/**/secrets.h
