@@ -161,7 +161,7 @@ export const defaultTokens: FaceTokens = {
   cheekRy: 12,
   cheekX: 31,
   cheekY: 54,
-  browCurve: 0.42,
+  browCurve: 0.3,
   browThick: 6,
   lashLen: 17,
 
@@ -260,7 +260,7 @@ export const defaultTokens: FaceTokens = {
   doubleTapMs: 350,
   longPressMs: 700,
   browGap: 10,
-  browLength: 24,
+  browLength: 40,
   browWeight: 2.6,
 
   blinkMin: 5_000, // Gideon, 3 Oct: was 2.5 to 6 s, a little distracting on the robot

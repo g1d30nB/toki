@@ -185,7 +185,7 @@ constexpr Tokens kTokens = {
   12.0f, // cheekRy
   31.0f, // cheekX
   54.0f, // cheekY
-  0.42f, // browCurve
+  0.3f, // browCurve
   6.0f, // browThick
   17.0f, // lashLen
   2.4f, // smileCurve
@@ -283,7 +283,7 @@ constexpr Tokens kTokens = {
   350.0f, // doubleTapMs
   700.0f, // longPressMs
   10.0f, // browGap
-  24.0f, // browLength
+  40.0f, // browLength
   2.6f, // browWeight
   5000.0f, // blinkMin
   12000.0f, // blinkMax
