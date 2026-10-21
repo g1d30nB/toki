@@ -51,6 +51,7 @@ export type FaceTokens = {
   zzzStep: number; // px between letters, left to right
   zzzRise: number; // px each letter climbs above the last
   zzzCycleMs: number; // pop in one by one, hold, fade, repeat
+  zzzFirstUp: number; // the first, smallest z sits this much higher (face review, 21 Oct)
   sparkleLarge: number; // done: star radii, px (the smallest stays 8 px or more across)
   sparkleMid: number;
   sparkleSmall: number;
@@ -188,13 +189,14 @@ export const defaultTokens: FaceTokens = {
   zzzStep: 16,
   zzzRise: 18,
   zzzCycleMs: 3_000,
-  sparkleLarge: 9,
-  sparkleMid: 6.5,
-  sparkleSmall: 4.5,
+  zzzFirstUp: 7,
+  sparkleLarge: 11.5,
+  sparkleMid: 8,
+  sparkleSmall: 5.5,
   sparkleConcave: 0.62,
   sparkleTip: 1.2,
-  sparkleX: 20,
-  sparkleY: 22,
+  sparkleX: 13,
+  sparkleY: 12,
   sparklePopMs: 200,
   sparkleStaggerMs: 120,
   sparkleTwinkle: 0.12,
@@ -209,16 +211,16 @@ export const defaultTokens: FaceTokens = {
   miniPupil: 0.4,
   miniLook: 0.3,
   miniCap: 4,
-  miniS1x: 278,
-  miniS1y: 162,
+  miniS1x: 282,
+  miniS1y: 184,
   miniS1tilt: 8,
   miniS1size: 1.0,
-  miniS2x: 42,
-  miniS2y: 150,
+  miniS2x: 38,
+  miniS2y: 180,
   miniS2tilt: -6,
   miniS2size: 0.92,
-  miniS3x: 202,
-  miniS3y: 198,
+  miniS3x: 204,
+  miniS3y: 186,
   miniS3tilt: 5,
   miniS3size: 0.86,
   miniS4x: 38,
@@ -240,7 +242,7 @@ export const defaultTokens: FaceTokens = {
   mouthWeight: 2.6,
   mouthX: 0,
   tongueSide: 1,
-  hintY: 150,
+  hintY: 157,
   hintSize: 22, // Baloo 2, 22 px (spec §7.3: text minimum 20 px)
   buttonY: 184,
   buttonH: 48,
@@ -321,6 +323,7 @@ export const tokenRanges: Partial<Record<keyof FaceTokens, [number, number, numb
   zzzStep: [10, 30, 1],
   zzzRise: [0, 20, 1],
   zzzCycleMs: [1_500, 6_000, 100],
+  zzzFirstUp: [0, 20, 1],
   sparkleLarge: [5, 16, 0.5],
   sparkleMid: [4, 12, 0.5],
   sparkleSmall: [4, 10, 0.5],

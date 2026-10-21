@@ -51,8 +51,8 @@ void sweat(Ctx& c) {
   const float R = 7 * s;
   c.g.fillCircle(ri(x), ri(y + R), ri(R + 2), kLine);
   c.g.fillTriangle(ri(x - R - 1.5f), ri(y + R * 0.7f), ri(x + R + 1.5f), ri(y + R * 0.7f), ri(x), ri(y - R * 1.5f), kLine);
-  c.g.fillCircle(ri(x), ri(y + R), ri(R), kTeal);
-  c.g.fillTriangle(ri(x - R), ri(y + R * 0.75f), ri(x + R), ri(y + R * 0.75f), ri(x), ri(y - R * 1.2f), kTeal);
+  c.g.fillCircle(ri(x), ri(y + R), ri(R), kWater);
+  c.g.fillTriangle(ri(x - R), ri(y + R * 0.75f), ri(x + R), ri(y + R * 0.75f), ri(x), ri(y - R * 1.2f), kWater);
   c.g.fillCircle(ri(x - R * 0.35f), ri(y + R * 0.75f), ri(R * 0.28f), kShine);
 }
 
@@ -105,7 +105,6 @@ void magnifier(Ctx& c) {
     lensDst->fillArc(dst / 2, dst / 2, ri(c.tk.lensR), ri(c.tk.lensR * 1.5f), 0, 360, kLensKey);
     lensDst->pushSprite(&c.g, x - dst / 2, y - dst / 2, kLensKey);
   }
-  c.g.fillArc(x, y, ri(R * 0.62f), ri(R * 0.74f), 200, 250, kShine);  // glare
   c.g.fillArc(x, y, ri(R), ri(R + c.tk.lensRim), 0, 360, kLine);     // rim
   const float hx = x + (R + c.tk.lensRim) * 0.7f, hy = y + (R + c.tk.lensRim) * 0.7f;
   wideLine(c.g, hx, hy, hx + R * 0.75f, hy + R * 0.75f, c.tk.lensRim * 1.1f, kLine);  // handle
@@ -198,27 +197,32 @@ void zzz(Ctx& c) {
     c.g.setTextSize(i == 3 ? 1.15f : 1.0f);
     c.g.setTextColor(mix(kLine, kFace, fmaxf(1 - p, fade)));
     const float x = 320 - 12 - c.tk.zzzStep * (3 - i);
-    const float y = 12 + c.tk.zzzRise * (3 - i) + sinf(c.t / 700 + i) * 1.5f;
+    const float y = 12 + c.tk.zzzRise * (3 - i) - (i == 0 ? c.tk.zzzFirstUp : 0) + sinf(c.t / 700 + i) * 1.5f;
     c.g.drawString(i == 0 ? "z" : "Z", ri(x), ri(y));
   }
   c.g.setTextSize(1);
 }
 
 void question(Ctx& c) {
-  // "?" (asked a question): a teal badge with a cream question mark above the
-  // middle of the face, where blocked has its "…", bigger so the two part at the
-  // edge of vision; bobbing gently.
+  // "?" (asked a question): a big water-blue question mark floating between the
+  // brows, bobbing gently (face review, 21 Oct: no badge). Drawn, not lettered:
+  // a hook, a short stem and a dot.
   if (c.k <= 0.05f) return;
   const Eye& left = c.eyes[0];
-  const float top = left.cy - left.ry - c.tk.outline - c.tk.border;
-  const float R = 17 * fminf(1.1f, c.k);
-  const float y = fmaxf(10 + R, top - c.tk.dotsGap - 6 + sinf(c.t / 500) * 1.5f);
-  c.g.fillCircle(160, ri(y), ri(R + 2.5f), kLine);
-  c.g.fillCircle(160, ri(y), ri(R), kTeal);
-  c.g.setFont(&fonts::FreeSansBold12pt7b);
-  c.g.setTextColor(kCream);
-  c.g.setTextDatum(middle_center);
-  c.g.drawString("?", 160, ri(y + 1));
+  const float s = fminf(1, c.k);
+  const float H = 38 * s, R = 9 * s, pen = 3.4f * s;
+  const float top = fmaxf(12, left.cy - left.ry - c.tk.dotsGap - H + 6 + sinf(c.t / 500) * 1.5f);
+  const float cy = top + R;
+  float px = 0, py = 0;
+  for (int i = 0; i <= 14; i++) {
+    const float a = (200 + i / 14.0f * 230) * PI / 180;
+    const float nx = 160 + cosf(a) * R, ny = cy + sinf(a) * R;
+    if (i) wideLine(c.g, px, py, nx, ny, pen, kWater);
+    px = nx;
+    py = ny;
+  }
+  wideLine(c.g, px, py, 160, cy + R * 1.75f, pen, kWater);
+  c.g.fillCircle(160, ri(top + H - pen), ri(pen * 1.15f), kWater);
 }
 
 using DrawFn = void (*)(Ctx&);

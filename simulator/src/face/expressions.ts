@@ -8,7 +8,7 @@ export type EyeShape = "round" | "arc" | "line" | "sparkle" | "spiral" | "star" 
 export type Gaze = "still" | "scan" | "dart" | "scroll-up" | "look-around" | "follow-www";
 // Kawaii pass (21 Oct) adds: open (an open smile, coloured inside, with a tongue),
 // blep (a straight mouth with the tongue out), cat (ω) and shout (an open, cross mouth).
-export type MouthShape = "none" | "line" | "smile" | "o" | "pout" | "tongue" | "wobble" | "yawn" | "open" | "blep" | "cat" | "shout";
+export type MouthShape = "none" | "line" | "smile" | "o" | "pout" | "tongue" | "wobble" | "yawn" | "open" | "blep" | "cat" | "shout" | "hmm";
 export type ManpuKind = "dots" | "sweat" | "magnifier" | "www" | "sparkles" | "blush" | "zzz" | "question" | "wifi" | "wifiOn"; // wifi*: setup only
 
 export type Brows = {
@@ -80,7 +80,8 @@ const e = (over: Partial<Expression>): Expression => ({ ...base, ...over });
 
 // At the edge of vision only idle, working and blocked must be told apart, so
 // plain working states share one base face (spec §4.2, decided 3 Oct).
-const WORKING: Partial<Expression> = { roundness: 1, pupil: { x: 0, y: 0.1 }, brows: { y: 0, angle: -2, tilt: 0 }, mouth: "line" };
+// Face review (Gideon, 21 Oct): a slight frown, concentrating.
+const WORKING: Partial<Expression> = { roundness: 1, pupil: { x: 0, y: 0.1 }, brows: { y: -1, angle: -9, tilt: 0 }, mouth: "line" };
 
 // Toki sits low on the desk and looks up at you, so "at you" is slightly up.
 const AT_YOU = { x: 0, y: -0.25 };
@@ -108,15 +109,17 @@ export const expressions = {
     blinkSoftness: 1.8,
     busy: false,
   }),
-  think: e({ pupil: { x: -0.55, y: -0.6 }, brows: { y: 3, angle: -13, tilt: 8 }, manpu: ["dots"], mouth: "pout" }),
+  // Thinking is a good thing (Gideon, 21 Oct): a thoughtful "hmm", not a frown.
+  think: e({ pupil: { x: -0.55, y: -0.6 }, brows: { y: 3, angle: -13, tilt: 8 }, manpu: ["dots"], mouth: "hmm" }),
   // Pass 3: read and run share the working face; only their eye loops differ,
   // in motion (scanning lines; following output up the screen).
   read: e({ ...WORKING, gaze: "scan" }),
   search: e({ open: 0.75, squint: 0.35, pupilScale: 0.85, gaze: "dart", brows: { y: -3, angle: -10, tilt: 0 }, manpu: ["magnifier"], mouth: "line" }),
-  // Kawaii pass: the tongue out, concentrating (the reference's tongue face).
+  // Kawaii pass: the tongue out, concentrating (the reference's tongue face); a
+  // smile, the tongue out of one side (face review, 21 Oct).
   edit: e({ pupil: { x: 0.1, y: 0.35 }, brows: { y: -2, angle: 6, tilt: 0 }, mouth: "blep" }),
   // Tuned by Gideon (3 Oct): eyes up and slightly left, right brow raised.
-  run: e({ ...WORKING, pupil: { x: -0.2, y: -0.65 }, brows: { y: 0, angle: -2, tilt: 10 }, gaze: "scroll-up" }),
+  run: e({ ...WORKING, pupil: { x: -0.2, y: -0.65 }, brows: { y: -1, angle: -9, tilt: 10 }, gaze: "scroll-up" }),
   // Worried: brows up in the middle, the top lids a little lowered, a nervous mouth.
   test: e({ open: 0.85, pupil: { x: 0, y: 0.1 }, blinkRate: 0.45, brows: { y: 5, angle: 12, tilt: 0 }, manpu: ["sweat"], mouth: "wobble" }),
   // Eyes up and out to the corner, drifting left to right in time with the "www" wave.
@@ -159,8 +162,10 @@ export const expressions = {
     open: 0.82,
     lidTilt: 22,
     pupil: { x: 0, y: 0.2 },
-    brows: { y: -1, angle: -26, tilt: 0, curve: 0 },
+    // Longer brows and the mouth a little lower (face review, 21 Oct).
+    brows: { y: -1, angle: -26, tilt: 0, curve: 0, len: 1.15 },
     mouth: "shout",
+    mouthShift: 6,
   }),
   // Your answers from the robot (spec §4.2): a happy squint and blush; a respectful "oh, okay".
   // Kawaii pass: the squeeze > < and an open smile, cheeks flushed.
@@ -195,12 +200,13 @@ export const expressions = {
     pupilScale: 0.85,
     brows: { y: 9, angle: 4, tilt: 0 },
     mouth: "open",
+    mouthShift: 5,
     cheeks: 1.25,
     busy: false,
   }),
   // Quiet mode (double-tap): eyes closed, content, "zZZZ" climbing in the corner
   // (Gideon, 3 Oct; was "shh"). Only approvals get through until it ends.
-  quiet: e({ shape: "sleep", lashes: true, brows: { y: -2, angle: 0, tilt: 0, len: 0.85 }, mouth: "smile", manpu: ["zzz"], busy: false }),
+  quiet: e({ shape: "sleep", lashes: true, brows: { y: -2, angle: 0, tilt: 0, len: 0.85 }, mouth: "smile", mouthShift: 5, manpu: ["zzz"], busy: false }),
   // "Close the day?" (long-press): hopeful eyes slid up above the question and
   // two booth buttons. Smiling lids and no "…" keep it apart from blocked.
   closeAsk: e({
@@ -210,6 +216,7 @@ export const expressions = {
     pupil: AT_YOU,
     pupilScale: 1.05,
     brows: { y: 5, angle: 7, tilt: 0 },
+    mouth: "smile", // face review, 21 Oct
     slide: -22,
     busy: false,
   }),

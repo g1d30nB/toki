@@ -42,9 +42,16 @@ export function drawMouth(g: Gfx, f: AnimatedFace, tk: FaceTokens, now: number) 
       arc(x, y + w * 0.55, w * 0.7, 205, 335);
       return;
     case "o":
-      g.fillEllipse(x, y, w * 0.4 + r, w * 0.55 + r, c);
-      g.fillEllipse(x, y, Math.max(1, w * 0.4 - r * 0.7), Math.max(1, w * 0.55 - r * 0.7), palette.face);
+      // A small round "o", filled like the other open mouths (face review, 21 Oct).
+      g.fillEllipse(x, y, w * 0.42, w * 0.55, c);
       return;
+    case "hmm": {
+      // Thinking (a good thing): a short line turning up at one end.
+      const R = w * 0.42;
+      g.drawWideLine(x - w * 0.62, y, x + w * 0.2, y, r, c);
+      arc(x + w * 0.2, y - R, R, 90, 5);
+      return;
+    }
     case "cat": {
       // ω: two small smiles side by side.
       const R = w * 0.38;
@@ -73,12 +80,17 @@ export function drawMouth(g: Gfx, f: AnimatedFace, tk: FaceTokens, now: number) 
       return;
     }
     case "blep": {
-      // The tongue out: a straight mouth, the tongue hanging below it.
-      g.drawWideLine(x - w * 0.75, y, x + w * 0.75, y, r, c);
-      const tw = w * 0.42;
-      g.fillRect(x - tw, y, tw * 2, tw * 0.9, palette.tomato);
-      g.fillCircle(x, y + tw * 0.9, tw, palette.tomato);
-      g.drawWideLine(x, y, x, y + tw * 1.2, r * 0.45, c);
+      // The tongue out of one side of a smile (face review, 21 Oct); tongueSide
+      // picks the corner. The tongue first, so the smile's line runs over its root.
+      const R = w * 0.82;
+      const cy = y - w * 0.5;
+      const tx = x + w * 0.34 * (tk.tongueSide || 1);
+      const ty = cy + Math.sqrt(R * R - (tx - x) ** 2);
+      const tw = w * 0.44;
+      g.fillRect(tx - tw, ty - r, tw * 2, tw * 0.9 + r, palette.tomato);
+      g.fillCircle(tx, ty + tw * 0.9, tw, palette.tomato);
+      g.drawWideLine(tx, ty, tx, ty + tw * 1.25, r * 0.45, c);
+      arc(x, cy, R, 22, 158);
       return;
     }
     case "shout": {

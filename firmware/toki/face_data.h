@@ -19,10 +19,11 @@ constexpr uint32_t kFace = 0xfbf4e4;
 constexpr uint32_t kLine = 0x1d2b53;
 constexpr uint32_t kShine = 0xffffff;
 constexpr uint32_t kCheek = 0xf4899f;
+constexpr uint32_t kWater = 0x3fa2e2;
 
 enum class EyeShape : uint8_t { Round, Arc, Line, Sparkle, Spiral, Star, Sleep };
 enum class Gaze : uint8_t { Still, Scan, Dart, ScrollUp, LookAround, FollowWww };
-enum class Mouth : uint8_t { None, Line, Smile, O, Pout, Tongue, Wobble, Yawn, Open, Blep, Cat, Shout };
+enum class Mouth : uint8_t { None, Line, Smile, O, Pout, Tongue, Wobble, Yawn, Open, Blep, Cat, Shout, Hmm };
 
 // Manpu are a bitmask: an expression can show several.
 constexpr uint16_t Manpu_Dots = 1u << 0;
@@ -79,6 +80,7 @@ struct Tokens {
   float zzzStep;
   float zzzRise;
   float zzzCycleMs;
+  float zzzFirstUp;
   float sparkleLarge;
   float sparkleMid;
   float sparkleSmall;
@@ -211,13 +213,14 @@ constexpr Tokens kTokens = {
   16.0f, // zzzStep
   18.0f, // zzzRise
   3000.0f, // zzzCycleMs
-  9.0f, // sparkleLarge
-  6.5f, // sparkleMid
-  4.5f, // sparkleSmall
+  7.0f, // zzzFirstUp
+  11.5f, // sparkleLarge
+  8.0f, // sparkleMid
+  5.5f, // sparkleSmall
   0.62f, // sparkleConcave
   1.2f, // sparkleTip
-  20.0f, // sparkleX
-  22.0f, // sparkleY
+  13.0f, // sparkleX
+  12.0f, // sparkleY
   200.0f, // sparklePopMs
   120.0f, // sparkleStaggerMs
   0.12f, // sparkleTwinkle
@@ -232,16 +235,16 @@ constexpr Tokens kTokens = {
   0.4f, // miniPupil
   0.3f, // miniLook
   4.0f, // miniCap
-  278.0f, // miniS1x
-  162.0f, // miniS1y
+  282.0f, // miniS1x
+  184.0f, // miniS1y
   8.0f, // miniS1tilt
   1.0f, // miniS1size
-  42.0f, // miniS2x
-  150.0f, // miniS2y
+  38.0f, // miniS2x
+  180.0f, // miniS2y
   -6.0f, // miniS2tilt
   0.92f, // miniS2size
-  202.0f, // miniS3x
-  198.0f, // miniS3y
+  204.0f, // miniS3x
+  186.0f, // miniS3y
   5.0f, // miniS3tilt
   0.86f, // miniS3size
   38.0f, // miniS4x
@@ -263,7 +266,7 @@ constexpr Tokens kTokens = {
   2.6f, // mouthWeight
   0.0f, // mouthX
   1.0f, // tongueSide
-  150.0f, // hintY
+  157.0f, // hintY
   22.0f, // hintSize
   184.0f, // buttonY
   48.0f, // buttonH
@@ -366,7 +369,7 @@ constexpr Expression kExpressions[] = {
     {-0.55f, -0.6f}, 1.0f, 1.0f,
     Gaze::Still,
     {3.0f, -13.0f, 8.0f, 1.0f, -1.0f},
-    Mouth::Pout, 0.0f,
+    Mouth::Hmm, 0.0f,
     Manpu_Dots,
     1.0f, 1.0f, true, 0.0f,
     1.0f, false, 0.0f,
@@ -376,7 +379,7 @@ constexpr Expression kExpressions[] = {
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.1f}, 1.0f, 1.0f,
     Gaze::Scan,
-    {0.0f, -2.0f, 0.0f, 1.0f, -1.0f},
+    {-1.0f, -9.0f, 0.0f, 1.0f, -1.0f},
     Mouth::Line, 0.0f,
     0,
     1.0f, 1.0f, true, 0.0f,
@@ -409,7 +412,7 @@ constexpr Expression kExpressions[] = {
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {-0.2f, -0.65f}, 1.0f, 1.0f,
     Gaze::ScrollUp,
-    {0.0f, -2.0f, 10.0f, 1.0f, -1.0f},
+    {-1.0f, -9.0f, 10.0f, 1.0f, -1.0f},
     Mouth::Line, 0.0f,
     0,
     1.0f, 1.0f, true, 0.0f,
@@ -453,7 +456,7 @@ constexpr Expression kExpressions[] = {
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.1f}, 1.0f, 1.0f,
     Gaze::Still,
-    {0.0f, -2.0f, 0.0f, 1.0f, -1.0f},
+    {-1.0f, -9.0f, 0.0f, 1.0f, -1.0f},
     Mouth::Line, 0.0f,
     0,
     1.0f, 1.0f, true, 0.0f,
@@ -486,8 +489,8 @@ constexpr Expression kExpressions[] = {
     1.0f, 1.0f, 0.82f, 0.0f, 0.0f,
     {0.0f, 0.2f}, 1.0f, 1.0f,
     Gaze::Still,
-    {-1.0f, -26.0f, 0.0f, 1.0f, 0.0f},
-    Mouth::Shout, 0.0f,
+    {-1.0f, -26.0f, 0.0f, 1.15f, 0.0f},
+    Mouth::Shout, 6.0f,
     0,
     1.0f, 1.0f, true, 0.0f,
     1.0f, false, 22.0f,
@@ -531,7 +534,7 @@ constexpr Expression kExpressions[] = {
     {0.0f, 0.0f}, 0.85f, 1.0f,
     Gaze::Still,
     {9.0f, 4.0f, 0.0f, 1.0f, -1.0f},
-    Mouth::Open, 0.0f,
+    Mouth::Open, 5.0f,
     0,
     1.0f, 1.0f, false, 0.0f,
     1.25f, false, 0.0f,
@@ -542,7 +545,7 @@ constexpr Expression kExpressions[] = {
     {0.0f, 0.0f}, 1.0f, 1.0f,
     Gaze::Still,
     {-2.0f, 0.0f, 0.0f, 0.85f, -1.0f},
-    Mouth::Smile, 0.0f,
+    Mouth::Smile, 5.0f,
     Manpu_Zzz,
     1.0f, 1.0f, false, 0.0f,
     1.0f, true, 0.0f,
@@ -553,7 +556,7 @@ constexpr Expression kExpressions[] = {
     {0.0f, -0.25f}, 1.05f, 1.15f,
     Gaze::Still,
     {5.0f, 7.0f, 0.0f, 1.0f, -1.0f},
-    Mouth::None, 0.0f,
+    Mouth::Smile, 0.0f,
     0,
     1.0f, 1.0f, false, -22.0f,
     1.0f, false, 0.0f,

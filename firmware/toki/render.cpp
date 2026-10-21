@@ -90,7 +90,7 @@ void drawCloseChrome(M5Canvas& g, const Tokens& tk) {
   g.drawString("Close the day?", 160, (int)tk.hintY);
   const int y = (int)tk.buttonY, h = (int)tk.buttonH;
   pill(g, tk, 8, kFace);
-  pill(g, tk, 164, kMustard);
+  pill(g, tk, 164, kCheek);  // face review, 21 Oct: the cheeks' pink
   g.setTextDatum(middle_center);
   useFont(g, Baloo::Bold28);
   g.drawString("Not yet", 82, y + h / 2);

@@ -14,7 +14,8 @@ export const palette = {
   face: "#fbf4e4", // the screen behind the face (the scrapbook's paper)
   line: "#1d2b53", // eyes, brows, mouths
   shine: "#ffffff", // the two shines in each eye
-  cheek: "#f4899f", // soft pink, cheeks only (outside the five colours, by choice)
+  cheek: "#f4899f", // soft pink: cheeks, and the Close button (outside the five colours, by choice)
+  water: "#3fa2e2", // a clear water blue: the sweat drop and the "?" (Gideon's face review, 21 Oct)
 } as const;
 
 /**

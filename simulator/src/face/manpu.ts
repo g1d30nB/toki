@@ -58,8 +58,8 @@ function sweat({ g, f, tk, t, k, grow }: Ctx) {
   // Teardrop: a circle plus a triangle pointing up; ink outline first, then the fill.
   g.fillCircle(x, y + R, R + 2, palette.line);
   g.fillTriangle(x - R - 1.5, y + R * 0.7, x + R + 1.5, y + R * 0.7, x, y - R * 1.5, palette.line);
-  g.fillCircle(x, y + R, R, palette.teal);
-  g.fillTriangle(x - R, y + R * 0.75, x + R, y + R * 0.75, x, y - R * 1.2, palette.teal);
+  g.fillCircle(x, y + R, R, palette.water);
+  g.fillTriangle(x - R, y + R * 0.75, x + R, y + R * 0.75, x, y - R * 1.2, palette.water);
   g.fillCircle(x - R * 0.35, y + R * 0.75, R * 0.28, palette.shine);
 }
 
@@ -75,9 +75,7 @@ function magnifier({ g, f, tk, t, k }: Ctx) {
   const x = r.cx + drift * r.rx * 0.45;
   const y = r.cy + r.ry * tk.lensY;
   g.magnify(x, y, R, tk.lensZoom);
-  // Glare: a small crescent of light on the glass, top left.
-  g.fillArc(x, y, R * 0.62, R * 0.74, 200, 250, palette.shine);
-  // Rim and handle.
+  // Rim and handle (no glare: the eye's own shines show through; face review, 21 Oct).
   g.fillArc(x, y, R, R + tk.lensRim, 0, 360, palette.line);
   const hx = x + (R + tk.lensRim) * 0.7;
   const hy = y + (R + tk.lensRim) * 0.7;
@@ -214,26 +212,39 @@ function zzz({ g, tk, t, k }: Ctx) {
     // From beside the right eye (first, small) up to the top-right corner (last,
     // big), right edges 12 px clear of the screen edge (spec §7.3).
     const x = 320 - 12 - tk.zzzStep * (3 - i) - g.textWidth(i === 0 ? "z" : "Z", size) / 2;
-    const y = 12 + tk.zzzRise * (3 - i) + Math.sin(t / 700 + i) * 1.5;
+    const y = 12 + tk.zzzRise * (3 - i) - (i === 0 ? tk.zzzFirstUp : 0) + Math.sin(t / 700 + i) * 1.5;
     const c = mix(palette.line, palette.face, Math.max(1 - p, fade));
     g.drawString(i === 0 ? "z" : "Z", x, y, c, size, "top_center", true);
   }
 }
 
 /**
- * "?" (asked a question): a teal badge with a cream question mark, above the middle
- * of the face where blocked has its "…", bobbing gently.
+ * "?" (asked a question): a big water-blue question mark floating between the
+ * brows, bobbing gently (face review, 21 Oct: no badge). Drawn, not lettered, so
+ * it can be any size and matches the face's round strokes: a hook, a short stem
+ * and a dot. Bigger than blocked's "…", so the two part at the edge of vision.
  */
 function question({ g, f, tk, t, k }: Ctx) {
   if (k <= 0.05) return;
   const [left] = eyeLayout(f, tk);
-  const top = left.cy - left.ry - tk.outline - tk.border;
-  // Bigger than the "…" it replaces, so asked and blocked part at the edge of vision.
-  const R = 17 * Math.min(1.1, k);
-  const y = Math.max(10 + R, top - tk.dotsGap - 6 + Math.sin(t / 500) * 1.5);
-  g.fillCircle(160, y, R + 2.5, palette.line);
-  g.fillCircle(160, y, R, palette.teal);
-  g.drawString("?", 160, y + 1, palette.cream, 28 * Math.min(1, k), "middle_center", true);
+  const s = Math.min(1, k);
+  const H = 38 * s; // top of the hook to the bottom of the dot
+  const top = Math.max(12, left.cy - left.ry - tk.dotsGap - H + 6 + Math.sin(t / 500) * 1.5);
+  const R = 9 * s; // the hook's radius
+  const cy = top + R;
+  const pen = 3.4 * s;
+  const c = palette.water;
+  // The hook: from the left, over the top and round to the right and down.
+  const pts: [number, number][] = [];
+  for (let i = 0; i <= 14; i++) {
+    const a = ((200 + (i / 14) * 230) * Math.PI) / 180;
+    pts.push([160 + Math.cos(a) * R, cy + Math.sin(a) * R]);
+  }
+  stroke(g, pts, pen, c);
+  // The stem, then the dot.
+  const [ex, ey] = pts[pts.length - 1];
+  g.drawWideLine(ex, ey, 160, cy + R * 1.75, pen, c);
+  g.fillCircle(160, top + H - pen, pen * 1.15, c);
 }
 
 /** Setup's Wi-Fi mark (face/setup.ts), in the web's top-right corner above the right brow. */

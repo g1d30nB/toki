@@ -188,7 +188,7 @@ export class FaceRenderer {
       const mid = tk.buttonY + tk.buttonH / 2;
       pill(g, tk, 8, palette.face);
       g.drawString("Not yet", 82, mid, palette.line, 28, "middle_center", true);
-      pill(g, tk, 164, palette.mustard);
+      pill(g, tk, 164, palette.cheek);
       g.drawString("Close", 238, mid, palette.line, 28, "middle_center", true);
     }
 

@@ -116,9 +116,16 @@ void drawMouth(M5Canvas& g, const AnimatedFace& f, const Tokens& tk, uint32_t no
       arc(x, y + w * 0.55f, w * 0.7f, 205, 335);
       return;
     case Mouth::O:
-      g.fillEllipse(ri(x), ri(y), ri(w * 0.4f + r), ri(w * 0.55f + r), kLine);
-      g.fillEllipse(ri(x), ri(y), ri(fmaxf(1, w * 0.4f - r * 0.7f)), ri(fmaxf(1, w * 0.55f - r * 0.7f)), kFace);
+      // A small round "o", filled like the other open mouths (face review, 21 Oct).
+      g.fillEllipse(ri(x), ri(y), ri(w * 0.42f), ri(w * 0.55f), kLine);
       return;
+    case Mouth::Hmm: {
+      // Thinking (a good thing): a short line turning up at one end.
+      const float R = w * 0.42f;
+      line(x - w * 0.62f, y, x + w * 0.2f, y, r, kLine);
+      arc(x + w * 0.2f, y - R, R, 90, 5);
+      return;
+    }
     case Mouth::Cat: {
       const float R = w * 0.38f;
       arc(x - R, y - R * 0.5f, R, 15, 165);
@@ -146,12 +153,16 @@ void drawMouth(M5Canvas& g, const AnimatedFace& f, const Tokens& tk, uint32_t no
       return;
     }
     case Mouth::Blep: {
-      // The tongue out: a straight mouth, the tongue hanging below it.
-      line(x - w * 0.75f, y, x + w * 0.75f, y, r, kLine);
-      const float tw = w * 0.42f;
-      g.fillRect(ri(x - tw), ri(y), ri(tw * 2), ri(tw * 0.9f), kTomato);
-      g.fillCircle(ri(x), ri(y + tw * 0.9f), ri(tw), kTomato);
-      line(x, y, x, y + tw * 1.2f, r * 0.45f, kLine);
+      // The tongue out of one side of a smile (face review, 21 Oct); tongueSide picks
+      // the corner. The tongue first, so the smile's line runs over its root.
+      const float R = w * 0.82f, cy = y - w * 0.5f;
+      const float tx = x + w * 0.34f * (tk.tongueSide != 0 ? tk.tongueSide : 1);
+      const float ty = cy + sqrtf(R * R - (tx - x) * (tx - x));
+      const float tw = w * 0.44f;
+      g.fillRect(ri(tx - tw), ri(ty - r), ri(tw * 2), ri(tw * 0.9f + r), kTomato);
+      g.fillCircle(ri(tx), ri(ty + tw * 0.9f), ri(tw), kTomato);
+      line(tx, ty, tx, ty + tw * 1.25f, r * 0.45f, kLine);
+      arc(x, cy, R, 22, 158);
       return;
     }
     case Mouth::Shout: {
