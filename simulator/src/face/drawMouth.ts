@@ -78,7 +78,7 @@ export function drawMouth(g: Gfx, f: AnimatedFace, tk: FaceTokens, now: number) 
       const tw = w * 0.42;
       g.fillRect(x - tw, y, tw * 2, tw * 0.9, palette.tomato);
       g.fillCircle(x, y + tw * 0.9, tw, palette.tomato);
-      g.drawWideLine(x, y + r, x, y + tw * 1.2, r * 0.5, groove);
+      g.drawWideLine(x, y, x, y + tw * 1.2, r * 0.45, c);
       return;
     }
     case "shout": {
@@ -145,15 +145,13 @@ export function drawMouth(g: Gfx, f: AnimatedFace, tk: FaceTokens, now: number) 
   }
 }
 
-/** The groove down the middle of the tongue: a darker tomato. */
-const groove = "#b8401f";
 
 /** A horizontal run of pixels: left and right x. */
 type Span = [number, number];
 
 /**
  * A tongue inside an open mouth (Gideon, 21 Oct: a properly shaped tongue, not an
- * ellipse): two rounded humps on top with a notch between them, a groove down the
+ * ellipse): two rounded humps on top with a notch between them, a split down the
  * middle, and a body that fills the bottom of the mouth, following its outline.
  * Drawn as thin horizontal slices from `top` to `bottom`, each the tongue's width
  * at that height cut to the mouth's, shrunk by `inset` all round so navy runs
@@ -225,6 +223,7 @@ function tongue(
     prev = cur;
     prevY = yy;
   }
-  // The groove: from just under the notch, a little over half way down.
-  g.drawWideLine(cx, top + rr * 0.6, cx, top + (bottom - top) * 0.55, Math.max(1.1, half * 0.1), groove);
+  // The split down the middle, in navy so it reads as a gap (Gideon): from the
+  // notch to about two thirds of the way down.
+  g.drawWideLine(cx, top + rr * 0.5, cx, top + (bottom - top) * 0.68, Math.max(1, half * 0.09), palette.line);
 }

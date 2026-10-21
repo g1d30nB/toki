@@ -9,7 +9,6 @@ namespace toki {
 
 namespace {
 inline int ri(float v) { return (int)lroundf(v); }
-constexpr uint32_t kTongueGroove = 0xb8401f;  // a darker tomato, down the middle of the tongue
 
 struct Span {
   float l, r;
@@ -17,7 +16,7 @@ struct Span {
 
 /**
  * A tongue inside an open mouth (Gideon, 21 Oct): two rounded humps on top with a
- * notch between them, a groove down the middle, and a body that fills the bottom of
+ * notch between them, a split down the middle, and a body that fills the bottom of
  * the mouth. Thin horizontal slices from top to bottom, each the tongue's width cut
  * to the mouth's (`mouth(y, span)`, less `inset`). Port of tongue() in drawMouth.ts.
  */
@@ -83,7 +82,8 @@ void tongue(M5Canvas& g, float cx, float top, float bottom, float half, MouthSpa
     np = nc;
     prevY = yy;
   }
-  g.drawWideLine(ri(cx), ri(top + rr * 0.6f), ri(cx), ri(top + (bottom - top) * 0.55f), fmaxf(1.1f, half * 0.1f), kTongueGroove);
+  // The split down the middle, in navy so it reads as a gap (Gideon).
+  g.drawWideLine(ri(cx), ri(top + rr * 0.5f), ri(cx), ri(top + (bottom - top) * 0.68f), fmaxf(1, half * 0.09f), kLine);
 }
 }  // namespace
 
@@ -151,7 +151,7 @@ void drawMouth(M5Canvas& g, const AnimatedFace& f, const Tokens& tk, uint32_t no
       const float tw = w * 0.42f;
       g.fillRect(ri(x - tw), ri(y), ri(tw * 2), ri(tw * 0.9f), kTomato);
       g.fillCircle(ri(x), ri(y + tw * 0.9f), ri(tw), kTomato);
-      line(x, y + r, x, y + tw * 1.2f, r * 0.5f, kTongueGroove);
+      line(x, y, x, y + tw * 1.2f, r * 0.45f, kLine);
       return;
     }
     case Mouth::Shout: {
