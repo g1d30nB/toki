@@ -24,6 +24,8 @@ export type AnimatedFace = {
   mouthShift: number;
   stretch: number; // squash and stretch on expression change: 1 = rest
   offsetY: number; // breathing plus slide, px
+  cheeks: number; // kawaii pass: pink cheek size, 0 none
+  lashes: boolean;
 };
 
 // Small seeded random generator, so a replay looks the same every time.
@@ -43,7 +45,7 @@ const clamp01 = (t: number) => Math.max(0, Math.min(1, t));
 
 type Pose = Pick<
   Expression,
-  "scale" | "roundness" | "open" | "smile" | "squint" | "pupil" | "pupilScale" | "highlight" | "brows" | "slide" | "mouthShift"
+  "scale" | "roundness" | "open" | "smile" | "squint" | "pupil" | "pupilScale" | "highlight" | "brows" | "slide" | "mouthShift" | "cheeks" | "lashes"
 > & {
   shape: EyeShape;
   mouth: MouthShape;
@@ -64,7 +66,10 @@ function blend(a: Pose, b: Pose, t: number): Pose {
       angle: lerp(a.brows.angle, b.brows.angle, t),
       tilt: lerp(a.brows.tilt, b.brows.tilt, t),
       len: lerp(a.brows.len ?? 1, b.brows.len ?? 1, t),
+      curve: a.brows.curve === undefined && b.brows.curve === undefined ? undefined : lerp(a.brows.curve ?? 0.32, b.brows.curve ?? 0.32, t),
     },
+    cheeks: lerp(a.cheeks, b.cheeks, t),
+    lashes: t < 0.5 ? a.lashes : b.lashes,
     slide: lerp(a.slide, b.slide, t),
     mouthShift: lerp(a.mouthShift, b.mouthShift, t),
     // Discrete parts swap at the midpoint, hidden in the squeeze.
@@ -174,6 +179,8 @@ export class FaceAnimator {
       mouthShift: pose.mouthShift,
       stretch,
       offsetY: breath + pose.slide,
+      cheeks: pose.cheeks,
+      lashes: pose.lashes,
     };
   }
 

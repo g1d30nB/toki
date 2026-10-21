@@ -13,6 +13,18 @@ export type FaceTokens = {
   irisR: number;
   pupilR: number;
   highlightR: number;
+  // Kawaii pass (21 Oct): solid dark eyes with two shines, one thin line weight,
+  // pink cheeks on every face, small arched brows.
+  lineWeight: number; // stroke radius of every line: closed eyes, lids, brows, lashes
+  shineBig: number; // the big shine, top right: radius as a fraction of the eye
+  shineSmall: number; // the small shine, bottom left
+  lookTravel: number; // px the whole eye moves when Toki looks (the eyes have no separate pupil)
+  cheekRx: number; // cheek half-width
+  cheekRy: number;
+  cheekX: number; // cheek centre, outwards from the eye's centre
+  cheekY: number; // and down from it
+  browCurve: number; // how arched the brows are: 0 straight, 0.5 a half-moon
+  lashLen: number; // the three lashes on lashed closed eyes
 
   smileCurve: number; // radius of the smiling lower lid, in eye widths: smaller is a rounder curve
   manpuScale: number;
@@ -129,15 +141,25 @@ export type FaceTokens = {
 };
 
 export const defaultTokens: FaceTokens = {
-  eyeY: 106,
-  eyeSpacing: 128,
-  eyeRx: 36,
-  eyeRy: 42,
+  eyeY: 100,
+  eyeSpacing: 124,
+  eyeRx: 32,
+  eyeRy: 34,
   outline: 6,
-  border: 3,
+  border: 0,
   irisR: 27,
   pupilR: 14,
   highlightR: 6,
+  lineWeight: 2.6,
+  shineBig: 0.34,
+  shineSmall: 0.15,
+  lookTravel: 7,
+  cheekRx: 19,
+  cheekRy: 12,
+  cheekX: 24,
+  cheekY: 48,
+  browCurve: 0.32,
+  lashLen: 9,
 
   smileCurve: 2.4,
   manpuScale: 1.5,
@@ -209,9 +231,9 @@ export const defaultTokens: FaceTokens = {
   manpuInMs: 120,
   manpuOutMs: 200,
   longTurnMin: 10,
-  mouthY: 56,
-  mouthWidth: 26,
-  mouthWeight: 2.5,
+  mouthY: 50,
+  mouthWidth: 34,
+  mouthWeight: 2.6,
   mouthX: 0,
   tongueSide: 1,
   hintY: 150,
@@ -234,8 +256,8 @@ export const defaultTokens: FaceTokens = {
   doubleTapMs: 350,
   longPressMs: 700,
   browGap: 10,
-  browLength: 34,
-  browWeight: 4,
+  browLength: 24,
+  browWeight: 2.6,
 
   blinkMin: 5_000, // Gideon, 3 Oct: was 2.5 to 6 s, a little distracting on the robot
   blinkMax: 12_000,
@@ -260,6 +282,16 @@ export const tokenRanges: Partial<Record<keyof FaceTokens, [number, number, numb
   irisR: [8, 40, 1],
   pupilR: [4, 30, 1],
   highlightR: [0, 14, 1],
+  lineWeight: [1, 5, 0.1],
+  shineBig: [0.1, 0.5, 0.01],
+  shineSmall: [0, 0.3, 0.01],
+  lookTravel: [0, 16, 0.5],
+  cheekRx: [0, 32, 1],
+  cheekRy: [0, 24, 1],
+  cheekX: [-10, 50, 1],
+  cheekY: [10, 70, 1],
+  browCurve: [0, 0.6, 0.02],
+  lashLen: [0, 16, 0.5],
   smileCurve: [0.8, 4, 0.1],
   manpuScale: [0.5, 2, 0.05],
   dotsStepMs: [150, 1_200, 50],

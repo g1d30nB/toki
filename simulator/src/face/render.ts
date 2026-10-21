@@ -1,6 +1,6 @@
 import type { AgentState } from "../state/agentState";
 import { FaceAnimator } from "./animator";
-import { drawEyes, eyeLayout } from "./drawEyes";
+import { drawCheeks, drawEyes, eyeLayout } from "./drawEyes";
 import { MiniLayer } from "./minis";
 import { drawMouth } from "./drawMouth";
 import { ManpuLayer } from "./manpu";
@@ -109,7 +109,7 @@ export class FaceRenderer {
     const id = setup ? SETUP_FACE[setup.screen] : (lab.expression ?? expressionFor(s));
     const blocked = id === "blocked" && !setup;
 
-    g.fillScreen(palette.ground);
+    g.fillScreen(palette.face); // kawaii pass: a cream screen
     // When blocked, the face slides up to make room for the buttons (spec §6).
     const look = lookupWith(lab.overrides);
     const face = this.anim.update(wallMs, id, tk, look);
@@ -148,6 +148,7 @@ export class FaceRenderer {
       }
     }
 
+    drawCheeks(g, face, tk);
     drawEyes(g, face, tk, wallMs);
     if (lab.mouth !== false) drawMouth(g, face, tk, wallMs);
     this.minis.draw(g, wallMs, tk, eyeLayout(face, tk));

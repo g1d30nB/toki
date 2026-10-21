@@ -3,16 +3,18 @@ import type { Gfx } from "./gfx";
 import { palette } from "./palette";
 import type { FaceTokens } from "./tokens";
 
-// Treatment B, "sticker-sheet character" (spec §7.2): round eyes with an amber
-// iris and highlights, navy linework, and a cream die-cut border so the navy
-// outline still reads against the navy ground. Only M5GFX primitives are used.
+// Kawaii pass (Gideon, 21 Oct; his kawaii sticker sheet): dark features on a cream
+// screen. An open eye is a solid navy disc with two white shines, big top right and
+// small bottom left; it has no separate pupil, so when Toki looks the whole eye
+// moves a little (lookTravel). Closed eyes are thin, even lines: a blink, ^, > <,
+// a sleepy curve (with lashes when content), a spiral. Only M5GFX primitives.
 
 export type Eye = { cx: number; cy: number; rx: number; ry: number; side: -1 | 1 };
 
-/** Where a straight lid line crosses the eye's outer ellipse, if it does. */
-function chord(e: Eye, outer: number, y0: number, slope: number): [number, number] | null {
-  const A = e.rx + outer;
-  const B = e.ry + outer;
+/** Where a straight line crosses the eye's ellipse, if it does. */
+function chord(e: Eye, y0: number, slope: number): [number, number] | null {
+  const A = e.rx;
+  const B = e.ry;
   const d = y0 - e.cy;
   const a = 1 / (A * A) + (slope * slope) / (B * B);
   const b = (2 * d * slope) / (B * B);
@@ -23,86 +25,61 @@ function chord(e: Eye, outer: number, y0: number, slope: number): [number, numbe
   return [(-b - r) / (2 * a), (-b + r) / (2 * a)];
 }
 
-/** Draws a lid edge: cover one side of the line with ground, then redraw the line as linework. */
+/** A lid: cover one side of a straight line with the screen, then draw the line across the eye. */
 function lid(g: Gfx, e: Eye, tk: FaceTokens, y0: number, slope: number, coverAbove: boolean) {
-  const outer = tk.outline + tk.border;
-  const left = e.cx - e.rx - outer - 1;
-  const top = e.cy - e.ry - outer - 1;
-  const w = (e.rx + outer + 1) * 2;
-  const h = (e.ry + outer + 1) * 2;
+  const left = e.cx - e.rx - 2;
+  const top = e.cy - e.ry - 2;
+  const w = (e.rx + 2) * 2;
+  const h = (e.ry + 2) * 2;
   const yAt = (x: number) => y0 + slope * (x - e.cx);
-
   g.setClipRect(left, top, w, h);
   const yl = yAt(left);
   const yr = yAt(left + w);
   if (coverAbove) {
-    g.fillRect(left, top, w, Math.max(0, Math.min(yl, yr) - top), palette.ground);
-    g.fillTriangle(left, Math.min(yl, yr), left + w, Math.min(yl, yr), yl < yr ? left + w : left, Math.max(yl, yr), palette.ground);
+    g.fillRect(left, top, w, Math.max(0, Math.min(yl, yr) - top), palette.face);
+    g.fillTriangle(left, Math.min(yl, yr), left + w, Math.min(yl, yr), yl < yr ? left + w : left, Math.max(yl, yr), palette.face);
   } else {
     const bottom = top + h;
-    g.fillRect(left, Math.max(yl, yr), w, Math.max(0, bottom - Math.max(yl, yr)), palette.ground);
-    g.fillTriangle(left, Math.max(yl, yr), left + w, Math.max(yl, yr), yl > yr ? left + w : left, Math.min(yl, yr), palette.ground);
+    g.fillRect(left, Math.max(yl, yr), w, Math.max(0, bottom - Math.max(yl, yr)), palette.face);
+    g.fillTriangle(left, Math.max(yl, yr), left + w, Math.max(yl, yr), yl > yr ? left + w : left, Math.min(yl, yr), palette.face);
   }
   g.clearClipRect();
-
-  // The lid edge runs along the outline's centreline, so it joins the outline cleanly.
-  const ch = chord(e, tk.outline / 2, y0, slope);
+  // The lid's edge: a line across the eye, a little wider than it, as a drawn lid would be.
+  const ch = chord(e, y0, slope);
   if (!ch) return;
-  const [u0, u1] = ch;
-  const x0 = e.cx + u0;
-  const x1 = e.cx + u1;
-  // The cream die-cut border sits only on the covered (outside) side of the lid,
-  // never inside the eye, where it would draw a pale band across the iris.
-  const shift = (coverAbove ? -1 : 1) * (tk.border / 2);
-  g.drawWideLine(x0, yAt(x0) + shift, x1, yAt(x1) + shift, tk.outline / 2 + tk.border / 2, palette.cream);
-  g.drawWideLine(x0, yAt(x0), x1, yAt(x1), tk.outline / 2, palette.ink);
+  const over = tk.lineWeight;
+  const x0 = e.cx + ch[0] - over;
+  const x1 = e.cx + ch[1] + over;
+  g.drawWideLine(x0, yAt(x0), x1, yAt(x1), tk.lineWeight, palette.line);
 }
 
-function roundEye(g: Gfx, e: Eye, f: AnimatedFace, tk: FaceTokens, sparkle: boolean) {
+function roundEye(g: Gfx, base: Eye, f: AnimatedFace, tk: FaceTokens, sparkle: boolean) {
   const open = Math.min(f.open, 1);
-  if (open < 0.08) return closedEye(g, e, tk);
+  if (open < 0.08) return closedEye(g, base, tk);
+  // No separate pupil: looking moves the whole eye a little.
+  const e: Eye = { ...base, cx: base.cx + f.pupilX * tk.lookTravel + f.saccadeX, cy: base.cy + f.pupilY * tk.lookTravel + f.saccadeY };
+  g.fillEllipse(e.cx, e.cy, e.rx, e.ry, palette.line);
 
-  // Die-cut border, navy outline, cream eye.
-  g.fillEllipse(e.cx, e.cy, e.rx + tk.outline + tk.border, e.ry + tk.outline + tk.border, palette.cream);
-  g.fillEllipse(e.cx, e.cy, e.rx + tk.outline, e.ry + tk.outline, palette.ink);
-  g.fillEllipse(e.cx, e.cy, e.rx, e.ry, palette.cream);
-
-  // Iris and pupil, kept inside the eye.
-  const ir = tk.irisR * f.pupilScale * Math.min(1, e.rx / tk.eyeRx);
-  const travelX = Math.max(0, e.rx - ir - 3);
-  const travelY = Math.max(0, e.ry - ir - 3);
-  const ix = e.cx + f.pupilX * travelX + f.saccadeX;
-  const iy = e.cy + f.pupilY * travelY + f.saccadeY;
-  g.fillCircle(ix, iy, ir, palette.mustard);
-  g.fillCircle(ix, iy, Math.max(2, ir * (tk.pupilR / tk.irisR)), palette.ink);
-  // The shine scales with the eye, so a small eye (asked) keeps its proportions.
-  const hr = tk.highlightR * f.highlight * Math.min(1, e.rx / tk.eyeRx);
-  g.fillCircle(ix - ir * 0.36, iy - ir * 0.4, hr, palette.cream);
-  g.fillCircle(ix + ir * 0.34, iy + ir * 0.34, hr * 0.45, palette.cream);
+  // Two shines, the kawaii signature: big top right, small bottom left. They scale
+  // with the eye, and `highlight` makes them glossier.
+  const r = Math.min(e.rx, e.ry);
+  const big = r * tk.shineBig * f.highlight;
+  const bx = e.cx + e.rx * 0.3;
+  const by = e.cy - e.ry * 0.28;
   if (sparkle) {
-    // A four-point star in the highlight: reserved for success moments.
-    const sx = ix - ir * 0.36;
-    const sy = iy - ir * 0.4;
-    const L = tk.highlightR * 2.2;
-    const w = tk.highlightR * 0.55;
-    g.fillTriangle(sx - L, sy, sx + L, sy, sx, sy - w, palette.cream);
-    g.fillTriangle(sx - L, sy, sx + L, sy, sx, sy + w, palette.cream);
-    g.fillTriangle(sx, sy - L, sx, sy + L, sx - w, sy, palette.cream);
-    g.fillTriangle(sx, sy - L, sx, sy + L, sx + w, sy, palette.cream);
-  }
+    // Success: the big shine becomes a four-point star.
+    g.fillPolygon(starPoints(bx, by, big * 1.5, 0.7), palette.shine);
+  } else g.fillCircle(bx, by, big, palette.shine);
+  g.fillCircle(e.cx - e.rx * 0.34, e.cy + e.ry * 0.36, r * tk.shineSmall * Math.min(1.3, f.highlight), palette.shine);
 
-  // Top lid: level; it only opens and closes (brows carry the emotion).
+  // Top lid: flat; it opens and closes (half-lidded faces, blinks).
   if (open < 0.99) {
-    // At open = 1 the lid sits on the top of the eye; at 0 it has come 60% of the way down.
     const y0 = e.cy - e.ry + (1 - open) * e.ry * 2 * 0.6;
     lid(g, e, tk, y0, 0, true);
   }
   if (f.smile > 0.01) smileLid(g, e, tk, f.smile);
   // Lower lid: rises when squinting.
-  if (f.squint > 0.01) {
-    const y0 = e.cy + e.ry - f.squint * e.ry;
-    lid(g, e, tk, y0, 0, false);
-  }
+  if (f.squint > 0.01) lid(g, e, tk, e.cy + e.ry - f.squint * e.ry, 0, false);
 }
 
 /**
@@ -127,70 +104,76 @@ function ellipseInsideCircle(e: Eye, A: number, B: number, cx0: number, cy0: num
   return [...top, ...bottom.reverse()];
 }
 
-/**
- * Smiling lower lid: the bottom of the eye itself takes a gentle upward curve.
- * The eye is clipped to the curve, and the outline and die-cut border follow it,
- * exactly as they follow the rest of the eye. No stroke is drawn inside the eye.
- */
+/** Smiling eyes: the bottom of the eye is cut away by an upward curve, a happy squint. */
 function smileLid(g: Gfx, e: Eye, tk: FaceTokens, amount: number) {
-  const o = tk.outline;
-  const bd = tk.border;
   const R = e.rx * tk.smileCurve;
   const topY = e.cy + e.ry - amount * e.ry * 2; // where the curve crosses the middle of the eye
-  const cy0 = topY + R;
-  // Inside the circle is below the curve. Rings, from the eye outwards:
-  // navy outline, then cream border, then the ground.
-  g.fillPolygon(ellipseInsideCircle(e, e.rx + o, e.ry + o, e.cx, cy0, R), palette.ink);
-  g.fillPolygon(ellipseInsideCircle(e, e.rx + o + bd, e.ry + o + bd, e.cx, cy0, R - o), palette.cream);
-  g.fillPolygon(ellipseInsideCircle(e, e.rx + o + bd + 1, e.ry + o + bd + 1, e.cx, cy0, R - o - bd), palette.ground);
+  g.fillPolygon(ellipseInsideCircle(e, e.rx + 1, e.ry + 1, e.cx, topY + R, R), palette.face);
 }
 
+/** A blink: one thin line. */
 function closedEye(g: Gfx, e: Eye, tk: FaceTokens) {
   const y = e.cy + e.ry * 0.2;
-  g.drawWideLine(e.cx - e.rx, y, e.cx + e.rx, y, tk.outline / 2 + tk.border, palette.cream);
-  g.drawWideLine(e.cx - e.rx, y, e.cx + e.rx, y, tk.outline / 2, palette.ink);
+  g.drawWideLine(e.cx - e.rx * 0.8, y, e.cx + e.rx * 0.8, y, tk.lineWeight, palette.line);
+}
+
+/** Draws a curve through the points as one even line. */
+function polyline(g: Gfx, pts: [number, number][], r: number, c: string) {
+  for (let i = 1; i < pts.length; i++) g.drawWideLine(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], r, c);
+}
+
+/** Points along a circle's arc, degrees clockwise from the right (y down). */
+function arcPoints(cx: number, cy: number, r: number, from: number, to: number, n = 16): [number, number][] {
+  return Array.from({ length: n + 1 }, (_, i) => {
+    const a = ((from + ((to - from) * i) / n) * Math.PI) / 180;
+    return [cx + Math.cos(a) * r, cy + Math.sin(a) * r] as [number, number];
+  });
 }
 
 /** Spiral eyes: a dizzy moment before > < (error). */
 function spiralEye(g: Gfx, e: Eye, tk: FaceTokens, t: number) {
-  g.fillEllipse(e.cx, e.cy, e.rx + tk.outline + tk.border, e.ry + tk.outline + tk.border, palette.cream);
-  g.fillEllipse(e.cx, e.cy, e.rx + tk.outline, e.ry + tk.outline, palette.ink);
-  g.fillEllipse(e.cx, e.cy, e.rx, e.ry, palette.cream);
   const turns = 2.5;
   const steps = 40;
   const spin = (t / 160) * e.side;
-  let px = e.cx;
-  let py = e.cy;
+  const pts: [number, number][] = [[e.cx, e.cy]];
   for (let i = 1; i <= steps; i++) {
     const a = (i / steps) * turns * Math.PI * 2 + spin;
-    const rr = (i / steps) * 0.82;
-    const x = e.cx + Math.cos(a) * e.rx * rr;
-    const y = e.cy + Math.sin(a) * e.ry * rr;
-    g.drawWideLine(px, py, x, y, tk.outline / 2, palette.ink);
-    px = x;
-    py = y;
+    const rr = (i / steps) * 0.9;
+    pts.push([e.cx + Math.cos(a) * e.rx * rr, e.cy + Math.sin(a) * e.ry * rr]);
   }
+  polyline(g, pts, tk.lineWeight, palette.line);
 }
 
-/** Happy arcs: ^ ^ (done). */
-function arcEye(g: Gfx, e: Eye, tk: FaceTokens) {
-  const cy = e.cy + e.ry * 0.45;
-  const r = e.rx;
-  const t = tk.outline + 4;
-  g.fillArc(e.cx, cy, r - t / 2 - tk.border, r + t / 2 + tk.border, 200, 340, palette.cream);
-  g.fillArc(e.cx, cy, r - t / 2, r + t / 2, 202, 338, palette.ink);
+/** Happy arcs: ^ ^ (done, boop). */
+function arcEye(g: Gfx, e: Eye, tk: FaceTokens, lashes: boolean) {
+  const r = e.rx * 0.78;
+  const cy = e.cy + e.ry * 0.35;
+  polyline(g, arcPoints(e.cx, cy, r, 200, 340), tk.lineWeight * 1.15, palette.line);
+  if (lashes) lashTicks(g, e, tk, e.cx + e.side * r * Math.cos((20 * Math.PI) / 180), cy - r * Math.sin((20 * Math.PI) / 180), -1);
 }
 
-/**
- * Content closed eyes: a downward curve, like a sleeping smile (quiet, sleepy,
- * night). The curve sits a little above the eye's centre.
- */
-function sleepEye(g: Gfx, e: Eye, tk: FaceTokens) {
-  const r = e.rx * 0.85;
-  const cy = e.cy - e.ry * 0.3;
-  const t = tk.outline + 2;
-  g.fillArc(e.cx, cy, r - t / 2 - tk.border, r + t / 2 + tk.border, 22, 158, palette.cream);
-  g.fillArc(e.cx, cy, r - t / 2, r + t / 2, 24, 156, palette.ink);
+/** Content closed eyes: a downward curve, like a sleeping smile (quiet, sleepy, night). */
+function sleepEye(g: Gfx, e: Eye, tk: FaceTokens, lashes: boolean) {
+  const r = e.rx * 0.8;
+  const cy = e.cy - e.ry * 0.15;
+  polyline(g, arcPoints(e.cx, cy, r, 20, 160), tk.lineWeight * 1.15, palette.line);
+  // The lashes grow from the outer end of the curve.
+  if (lashes) lashTicks(g, e, tk, e.cx + e.side * r * Math.cos((20 * Math.PI) / 180), cy + r * Math.sin((20 * Math.PI) / 180), 1);
+}
+
+/** Three short lashes fanning out from (x, y), on the eye's outer side; dir 1 for a ∪, -1 for a ∩. */
+function lashTicks(g: Gfx, e: Eye, tk: FaceTokens, x: number, y: number, dir: 1 | -1) {
+  const L = tk.lashLen;
+  for (const [a, k] of [
+    [-40, 0],
+    [-10, 0.45],
+    [20, 0.9],
+  ] as const) {
+    const rad = (a * Math.PI) / 180;
+    const sx = x - e.side * k * 3;
+    const sy = y - dir * k * 4;
+    g.drawWideLine(sx, sy, sx + e.side * Math.cos(rad) * L, sy - dir * Math.sin(-rad + Math.PI / 6) * L, tk.lineWeight * 0.85, palette.line);
+  }
 }
 
 /** Points round a four-point star with slightly concave sides (a superellipse below 1). */
@@ -205,54 +188,45 @@ export function starPoints(x: number, y: number, R: number, concave: number, n =
   return pts;
 }
 
-/**
- * Star eyes (day closed, earned; tests pass later): the eye itself becomes a
- * mustard four-point star, with the same navy outline and cream die-cut border
- * as the round eye, and one highlight.
- */
+/** Star eyes (day closed, earned): the eye becomes a mustard four-point star, outlined, with one shine. */
 function starEye(g: Gfx, e: Eye, tk: FaceTokens) {
   const R = e.ry * 1.05;
   const pts = starPoints(e.cx, e.cy, R, tk.sparkleConcave);
-  const ring = (r: number, c: string) => {
-    for (let i = 0; i < pts.length; i++) {
-      const [x0, y0] = pts[i];
-      const [x1, y1] = pts[(i + 1) % pts.length];
-      g.drawWideLine(x0, y0, x1, y1, r, c);
-    }
-  };
-  ring(tk.outline / 2 + tk.border, palette.cream);
   g.fillPolygon(pts, palette.mustard);
-  ring(tk.outline / 2, palette.ink);
-  g.fillCircle(e.cx - R * 0.16, e.cy - R * 0.18, tk.highlightR * 0.9, palette.cream);
+  polyline(g, [...pts, pts[0]], tk.lineWeight, palette.line);
+  g.fillCircle(e.cx + R * 0.16, e.cy - R * 0.18, R * 0.14, palette.shine);
 }
 
-/** Squeezed chevrons: > < (error). */
+/** The squeeze: > < (approved, the end of error). */
 function chevronEye(g: Gfx, e: Eye, tk: FaceTokens) {
   const dx = e.rx * 0.75 * -e.side; // left eye points right (>), right eye points left (<)
-  const h = e.ry * 0.55;
+  const h = e.ry * 0.5;
   const tipX = e.cx + dx * 0.6;
   const backX = e.cx - dx * 0.6;
-  for (const [r, c] of [
-    [tk.outline / 2 + tk.border, palette.cream],
-    [tk.outline / 2, palette.ink],
-  ] as const) {
-    g.drawWideLine(backX, e.cy - h, tipX, e.cy, r, c);
-    g.drawWideLine(tipX, e.cy, backX, e.cy + h, r, c);
-  }
+  const r = tk.lineWeight * 1.25;
+  g.drawWideLine(backX, e.cy - h, tipX, e.cy, r, palette.line);
+  g.drawWideLine(tipX, e.cy, backX, e.cy + h, r, palette.line);
 }
 
-/** Brows: one short stroke per eye. Angle lifts the inner ends; tilt raises the right brow only. */
+/**
+ * Brows: a small arch above each eye, thin like the rest. Angle lifts the inner
+ * ends; tilt raises the right brow only; curve 0 makes a straight stroke (cross).
+ */
 function brow(g: Gfx, e: Eye, f: AnimatedFace, tk: FaceTokens) {
-  const a = ((f.brows.angle + (e.side === 1 ? f.brows.tilt : 0)) * Math.PI) / 180;
-  const y = e.cy - e.ry - tk.outline - tk.border - tk.browGap - f.brows.y;
   const half = (tk.browLength * (f.brows.len ?? 1)) / 2;
   if (half < 1) return; // brows.len 0: no brows (the small asked face)
-  const ix = e.cx - e.side * half * Math.cos(a); // inner end, towards the middle of the face
-  const iy = y - half * Math.sin(a);
-  const ox = e.cx + e.side * half * Math.cos(a);
-  const oy = y + half * Math.sin(a);
-  // Solid cream: a navy-cored stroke read as a hollow pill against the navy ground.
-  g.drawWideLine(ix, iy, ox, oy, tk.browWeight, palette.cream);
+  const a = ((f.brows.angle + (e.side === 1 ? f.brows.tilt : 0)) * Math.PI) / 180;
+  const y = e.cy - e.ry - tk.browGap - f.brows.y;
+  const sag = (f.brows.curve ?? tk.browCurve) * half; // how far the middle rises above the ends
+  const pts: [number, number][] = [];
+  for (let i = 0; i <= 12; i++) {
+    const u = -1 + (2 * i) / 12; // -1 inner end .. 1 outer end
+    const lx = u * half;
+    const ly = -sag * (1 - u * u);
+    // Tilted so the inner end (u = -1) lifts by the angle.
+    pts.push([e.cx + e.side * lx * Math.cos(a), y + ly + lx * Math.sin(a)]);
+  }
+  polyline(g, pts, tk.browWeight, palette.line);
 }
 
 /** Where the eyes are this frame: manpu and the mouth position themselves from these. */
@@ -269,13 +243,21 @@ export function eyeLayout(f: AnimatedFace, tk: FaceTokens): Eye[] {
   }));
 }
 
+/** Pink cheeks under the outer corners of the eyes, on every face (kawaii pass). */
+export function drawCheeks(g: Gfx, f: AnimatedFace, tk: FaceTokens) {
+  if (f.cheeks <= 0.01) return;
+  for (const e of eyeLayout(f, tk)) {
+    g.fillEllipse(e.cx + e.side * tk.cheekX, e.cy + tk.cheekY * Math.min(1.15, f.scale), tk.cheekRx * f.cheeks, tk.cheekRy * f.cheeks, palette.cheek);
+  }
+}
+
 export function drawEyes(g: Gfx, f: AnimatedFace, tk: FaceTokens, now = 0) {
   for (const e of eyeLayout(f, tk)) {
     brow(g, e, f, tk);
     if (f.shape === "spiral") spiralEye(g, e, tk, now);
-    else if (f.shape === "arc") arcEye(g, e, tk);
+    else if (f.shape === "arc") arcEye(g, e, tk, f.lashes);
     else if (f.shape === "line") chevronEye(g, e, tk);
-    else if (f.shape === "sleep") sleepEye(g, e, tk);
+    else if (f.shape === "sleep") sleepEye(g, e, tk, f.lashes);
     else if (f.shape === "star") starEye(g, e, tk);
     else roundEye(g, e, f, tk, f.shape === "sparkle");
   }

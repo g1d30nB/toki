@@ -6,7 +6,9 @@ import { defaultConfig, type AgentState, type Config } from "../state/agentState
 export type EyeShape = "round" | "arc" | "line" | "sparkle" | "spiral" | "star" | "sleep";
 /** Looping eye behaviours layered on top of the pose. */
 export type Gaze = "still" | "scan" | "dart" | "scroll-up" | "look-around" | "follow-www";
-export type MouthShape = "none" | "line" | "smile" | "o" | "pout" | "tongue" | "wobble" | "yawn";
+// Kawaii pass (21 Oct) adds: open (an open smile, coloured inside, with a tongue),
+// blep (a straight mouth with the tongue out), cat (ω) and shout (an open, cross mouth).
+export type MouthShape = "none" | "line" | "smile" | "o" | "pout" | "tongue" | "wobble" | "yawn" | "open" | "blep" | "cat" | "shout";
 export type ManpuKind = "dots" | "sweat" | "magnifier" | "www" | "sparkles" | "blush" | "zzz" | "question" | "wifi" | "wifiOn"; // wifi*: setup only
 
 export type Brows = {
@@ -14,6 +16,7 @@ export type Brows = {
   angle: number; // degrees; positive lifts the inner ends (worried, pleading), negative lowers them (determined)
   tilt: number; // degrees added to the right brow only (sceptical asymmetry)
   len?: number; // length multiplier; below 1 is shorter, closer, more relaxed
+  curve?: number; // arch, replacing the browCurve token: 0 is a straight stroke (cross)
 };
 
 export type Expression = {
@@ -41,6 +44,10 @@ export type Expression = {
   busy: boolean; // breathing speeds up
   /** px the face slides up to make room. */
   slide: number;
+  /** Pink cheeks (kawaii pass): 1 as usual, more for a blush, 0 for none. */
+  cheeks: number;
+  /** Three lashes at the outer end of closed eyes (content, sleepy). */
+  lashes: boolean;
 };
 
 const base: Expression = {
@@ -62,13 +69,15 @@ const base: Expression = {
   blinkSoftness: 1,
   busy: true,
   slide: 0,
+  cheeks: 1,
+  lashes: false,
 };
 
 const e = (over: Partial<Expression>): Expression => ({ ...base, ...over });
 
 // At the edge of vision only idle, working and blocked must be told apart, so
 // plain working states share one base face (spec §4.2, decided 3 Oct).
-const WORKING: Partial<Expression> = { pupil: { x: 0, y: 0.1 }, brows: { y: 0, angle: -2, tilt: 0 }, mouth: "line" };
+const WORKING: Partial<Expression> = { roundness: 1, pupil: { x: 0, y: 0.1 }, brows: { y: 0, angle: -2, tilt: 0 }, mouth: "line" };
 
 // Toki sits low on the desk and looks up at you, so "at you" is slightly up.
 const AT_YOU = { x: 0, y: -0.25 };
@@ -80,12 +89,17 @@ export const expressions = {
   // Pass 3: pupils centred; the top lid rests just above the iris, not across it;
   // the bottom of the eye itself curves up; brows lower, shorter and relaxed.
   // The same family as approved, at lower energy.
+  // Kawaii pass (21 Oct): calm round eyes whose bottoms curve up a little, a small
+  // smile, slow soft blinks, eyes wandering round the room.
   idle: e({
-    open: 0.76,
-    smile: 0.2,
+    roundness: 1,
+    // Smiling eyes, the bottoms curved up: content, and at the edge of vision a
+    // half-moon, never the same round discs as working (the acceptance test).
+    open: 1,
+    smile: 0.42,
     pupil: { x: 0, y: 0 },
     gaze: "look-around",
-    brows: { y: -4, angle: 0, tilt: 0, len: 0.8 },
+    brows: { y: -2, angle: 0, tilt: 0, len: 0.8 },
     mouth: "smile",
     blinkRate: 1.5,
     blinkSoftness: 1.8,
@@ -113,12 +127,12 @@ export const expressions = {
   // reserved for success moments.
   blocked: e({
     shape: "round",
-    highlight: 1.7,
-    scale: 1.06,
+    highlight: 1.2,
+    scale: 1.18,
     roundness: 1,
     pupil: AT_YOU,
     pupilScale: 1.1,
-    brows: { y: 1, angle: 8, tilt: 0 },
+    brows: { y: 4, angle: 8, tilt: 0 },
     manpu: ["dots"],
     // No mouth (Gideon, 3 Oct): the eyes, brows and "…" carry the waiting.
     mouth: "none",
@@ -133,7 +147,8 @@ export const expressions = {
   // Spiral eyes for 3 s (Gideon, 3 Oct; was 0.5 s), then > < (spec §4.2).
   error: e({ shape: "line", intro: { shape: "spiral", ms: 3_000 }, brows: { y: -3, angle: -18, tilt: 0 }, mouth: "pout" }),
   // Your answers from the robot (spec §4.2): a happy squint and blush; a respectful "oh, okay".
-  approved: e({ shape: "arc", brows: { y: 5, angle: 2, tilt: 0 }, mouth: "smile", manpu: ["blush"], busy: false }),
+  // Kawaii pass: the squeeze > < and an open smile, cheeks flushed.
+  approved: e({ shape: "line", brows: { y: 5, angle: 2, tilt: 0 }, mouth: "open", cheeks: 1.25, busy: false }),
   denied: e({ open: 0.85, pupil: { x: 0, y: 0.1 }, brows: { y: 3, angle: 10, tilt: 0 }, mouth: "o" }),
 
   // Claude asked you a question (spec §4.2 "Blocked: asked a question"; Gideon,

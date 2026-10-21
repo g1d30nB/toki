@@ -9,6 +9,12 @@ export const palette = {
   mustard: "#f2b134",
   teal: "#2a9d8f",
   dim: "#5b6b8c",
+  // Toki's face, kawaii pass (Gideon, 21 Oct): dark features on a cream screen, like
+  // his kawaii reference sheet, with pink cheeks. Roles, so the rest keeps the palette.
+  face: "#fbf4e4", // the screen behind the face (the scrapbook's paper)
+  line: "#1d2b53", // eyes, brows, mouths
+  shine: "#ffffff", // the two shines in each eye
+  cheek: "#f4899f", // soft pink, cheeks only (outside the five colours, by choice)
 } as const;
 
 /**

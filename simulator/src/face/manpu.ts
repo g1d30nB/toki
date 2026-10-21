@@ -43,7 +43,7 @@ function dots({ g, f, tk, t, k }: Ctx) {
     const p = (phase - (i + 1) * step) / Math.max(1, tk.manpuInMs);
     if (p < 0) continue;
     const pop = p < 0.7 ? (p / 0.7) * 1.15 : p < 1 ? 1.15 - ((p - 0.7) / 0.3) * 0.15 : 1; // 15% overshoot
-    g.fillCircle(160 + (i - 1) * 12 * tk.manpuScale, y, 4.5 * tk.manpuScale * k * pop, palette.cream);
+    g.fillCircle(160 + (i - 1) * 12 * tk.manpuScale, y, 4.5 * tk.manpuScale * k * pop, palette.line);
   }
 }
 
