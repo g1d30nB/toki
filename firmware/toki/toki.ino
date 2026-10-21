@@ -422,7 +422,7 @@ static void applyTour(FaceInput& in, uint32_t now) {
   in.always = "";
   in.alwaysAsk = false;
   in.questionHeader = "Which colour?";
-  in.shutter = tourFace == ExpressionId::Closed || tourFace == ExpressionId::Night ? 1 : tourFace == ExpressionId::Sleepy ? 0.8f : 0;
+  in.shutter = tourFace == ExpressionId::Night ? 0.8f : 0;  // the faces themselves in view; night shows the gap
   in.labelObject = tourFace == ExpressionId::Web ? "example.com" : tourFace == ExpressionId::Search ? "\"sparkles\"" : "sticker.ts";
 }
 

@@ -109,8 +109,8 @@ export class FaceAnimator {
 
   private targetPose(now: number): Pose {
     const to = this.look(this.current);
-    const intro = to.intro && now - this.changedAt < to.intro.ms ? to.intro.shape : to.shape;
-    return { ...to, shape: intro };
+    if (!to.intro || now - this.changedAt >= to.intro.ms) return to;
+    return { ...to, shape: to.intro.shape, mouth: to.intro.mouth ?? to.mouth };
   }
 
   private poseAt(now: number, tk: FaceTokens): Pose {

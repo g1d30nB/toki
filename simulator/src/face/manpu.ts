@@ -54,8 +54,11 @@ function sweat({ g, f, tk, t, k, grow }: Ctx) {
   const slide = easeOut(clamp01(t / tk.sweatSlideMs));
   const x = r.cx + r.rx + tk.outline + 8 * tk.manpuScale;
   const y = r.cy - r.ry * 0.9 - (1 - slide) * 18 + Math.sin(t / 600) * 1.5;
-  const R = 7 * s;
-  // Teardrop: a circle plus a triangle pointing up; ink outline first, then the fill.
+  drop(g, x, y, 7 * s);
+}
+
+/** A water drop pointing up, its round part centred R below (x, y): navy outline, water blue, a shine. */
+function drop(g: Gfx, x: number, y: number, R: number) {
   g.fillCircle(x, y + R, R + 2, palette.line);
   g.fillTriangle(x - R - 1.5, y + R * 0.7, x + R + 1.5, y + R * 0.7, x, y - R * 1.5, palette.line);
   g.fillCircle(x, y + R, R, palette.water);
@@ -247,6 +250,16 @@ function question({ g, f, tk, t, k }: Ctx) {
   g.fillCircle(160, top + H - pen, pen * 1.15, c);
 }
 
+/**
+ * Yawn tears (sleepy): a small water-blue drop at the outer corner of each eye,
+ * welling up during the yawn and gone once it's over (tearMs).
+ */
+function tear({ g, f, tk, t }: Ctx) {
+  const k = Math.min(clamp01(t / 300), clamp01((tk.tearMs - t) / 300));
+  if (k <= 0.05) return;
+  for (const e of eyeLayout(f, tk)) drop(g, e.cx + e.side * e.rx * 1.02, e.cy + e.ry * 0.05, 4.2 * k);
+}
+
 /** Setup's Wi-Fi mark (face/setup.ts), in the web's top-right corner above the right brow. */
 function wifiAt({ g, f, tk, t, k }: Ctx, on: boolean) {
   const [, r] = eyeLayout(f, tk);
@@ -265,6 +278,7 @@ const DRAW: Record<ManpuKind, (c: Ctx) => void> = {
   question,
   wifi: (c) => wifiAt(c, false),
   wifiOn: (c) => wifiAt(c, true),
+  tear,
 };
 
 /** Tracks which manpu are on screen, so each pops in and shrinks out on its own clock. */

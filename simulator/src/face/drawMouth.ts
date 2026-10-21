@@ -126,10 +126,11 @@ export function drawMouth(g: Gfx, f: AnimatedFace, tk: FaceTokens, now: number) 
       return;
     }
     case "yawn": {
-      // A big, slow yawn: a tall oval that opens and closes once every 2.4 s.
-      const open = 0.55 + 0.45 * Math.sin(Math.min(1, (now % 2_400) / 1_600) * Math.PI);
-      const rx = w * 0.7;
-      const ry = w * 1.1 * open;
+      // A big, slow yawn: a tall oval that opens wide and closes again, every 2.4 s
+      // from when the face began (now is the face's own clock), so it yawns on cue.
+      const open = 0.5 + 0.5 * Math.sin(Math.min(1, (now % 2_400) / 1_800) * Math.PI);
+      const rx = w * 0.8;
+      const ry = w * 1.25 * open;
       g.fillEllipse(x, y + 6, rx, ry, c);
       const span = (yy: number): Span | null => {
         const t = (yy - (y + 6)) / ry;

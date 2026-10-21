@@ -9,7 +9,7 @@ export type Gaze = "still" | "scan" | "dart" | "scroll-up" | "look-around" | "fo
 // Kawaii pass (21 Oct) adds: open (an open smile, coloured inside, with a tongue),
 // blep (a straight mouth with the tongue out), cat (ω) and shout (an open, cross mouth).
 export type MouthShape = "none" | "line" | "smile" | "o" | "pout" | "tongue" | "wobble" | "yawn" | "open" | "blep" | "cat" | "shout" | "hmm";
-export type ManpuKind = "dots" | "sweat" | "magnifier" | "www" | "sparkles" | "blush" | "zzz" | "question" | "wifi" | "wifiOn"; // wifi*: setup only
+export type ManpuKind = "dots" | "sweat" | "magnifier" | "www" | "sparkles" | "blush" | "zzz" | "question" | "wifi" | "wifiOn" | "tear"; // wifi*: setup only
 
 export type Brows = {
   y: number; // px above the default brow height; positive raises
@@ -21,8 +21,8 @@ export type Brows = {
 
 export type Expression = {
   shape: EyeShape;
-  /** Shown first for ms, then `shape`. */
-  intro?: { shape: EyeShape; ms: number };
+  /** Shown first for ms, then `shape` (and `mouth`, if the intro has its own). */
+  intro?: { shape: EyeShape; ms: number; mouth?: MouthShape };
   scale: number; // eye size multiplier
   roundness: number; // 0 = the default oval, 1 = a circle
   open: number; // 0 closed .. 1 fully open (lids only open and close); above 1 widens the eye
@@ -165,7 +165,6 @@ export const expressions = {
     // Longer brows and the mouth a little lower (face review, 21 Oct).
     brows: { y: -1, angle: -26, tilt: 0, curve: 0, len: 1.15 },
     mouth: "shout",
-    mouthShift: 6,
   }),
   // Your answers from the robot (spec §4.2): a happy squint and blush; a respectful "oh, okay".
   // Kawaii pass: the squeeze > < and an open smile, cheeks flushed.
@@ -200,13 +199,12 @@ export const expressions = {
     pupilScale: 0.85,
     brows: { y: 9, angle: 4, tilt: 0 },
     mouth: "open",
-    mouthShift: 5,
     cheeks: 1.25,
     busy: false,
   }),
   // Quiet mode (double-tap): eyes closed, content, "zZZZ" climbing in the corner
   // (Gideon, 3 Oct; was "shh"). Only approvals get through until it ends.
-  quiet: e({ shape: "sleep", lashes: true, brows: { y: -2, angle: 0, tilt: 0, len: 0.85 }, mouth: "smile", mouthShift: 5, manpu: ["zzz"], busy: false }),
+  quiet: e({ shape: "sleep", lashes: true, brows: { y: -2, angle: 0, tilt: 0, len: 0.85 }, mouth: "smile", manpu: ["zzz"], busy: false }),
   // "Close the day?" (long-press): hopeful eyes slid up above the question and
   // two booth buttons. Smiling lids and no "…" keep it apart from blocked.
   closeAsk: e({
@@ -222,8 +220,24 @@ export const expressions = {
   }),
   // Day closed, earned: star eyes and sparkles, then the shutter comes down.
   closed: e({ shape: "star", brows: { y: 7, angle: 0, tilt: 0 }, mouth: "open", cheeks: 1.2, manpu: ["sparkles"], busy: false }),
-  // Day closed, quiet: a soft yawn, then the shutter comes most of the way down.
-  sleepy: e({ shape: "sleep", lashes: true, brows: { y: -3, angle: 5, tilt: 0, len: 0.85 }, mouth: "yawn", busy: false }),
+  // Day closed, not earned: sleepy, not sorry (face review, 21 Oct). A big yawn,
+  // eyes squeezed > < with a yawn tear at each corner; then heavy, half-lidded
+  // eyes looking down and a small smile as the shutter comes most of the way down.
+  // Never disappointed: closing without a finished turn is fine.
+  sleepy: e({
+    shape: "round",
+    intro: { shape: "line", ms: 2_000, mouth: "yawn" },
+    open: 0.42,
+    lidTilt: -14, // lids drooping towards the outer corners: drowsy, not unimpressed
+    pupil: { x: 0, y: 0.6 },
+    brows: { y: -4, angle: 0, tilt: 0, len: 0.85 },
+    mouth: "smile",
+    manpu: ["tear"],
+    cheeks: 0.7,
+    blinkRate: 0.5,
+    blinkSoftness: 2,
+    busy: false,
+  }),
   // After closing: asleep under the shutter. It sits low, so after a quiet close
   // the sleeping eyes peek out from the gap under the shutter.
   night: e({ shape: "sleep", brows: { y: -4, angle: 0, tilt: 0, len: 0.8 }, mouth: "none", busy: false, slide: 96 }),

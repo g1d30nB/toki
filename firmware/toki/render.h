@@ -6,9 +6,9 @@
 
 namespace toki {
 
-constexpr int kManpuKinds = 10;  // dots, sweat, magnifier, www, sparkles, blush, zzz, question (face_data.h bits), then:
-constexpr uint16_t Manpu_Wifi = 1u << 8;    // setup: the Wi-Fi mark, arcs lighting in turn (joining)
-constexpr uint16_t Manpu_WifiOn = 1u << 9;  // setup: the Wi-Fi mark, all lit (joined)
+// dots, sweat, magnifier, www, sparkles, blush, zzz, question, then setup's Wi-Fi
+// mark (joining, joined) and sleepy's yawn tears: the Manpu_* bits in face_data.h.
+constexpr int kManpuKinds = 11;
 
 /** Toki's side of setup (Phase 7; port of simulator/src/face/setup.ts), in the order a new owner meets them. */
 enum class SetupScreen : uint8_t { None, Hello, Joining, Joined, WifiFailed, PairMe, PairCode, PairFailed, AllSet, CheckHead, Calibrate, Calibrated };

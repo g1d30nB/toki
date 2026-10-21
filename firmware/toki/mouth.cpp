@@ -190,10 +190,11 @@ void drawMouth(M5Canvas& g, const AnimatedFace& f, const Tokens& tk, uint32_t no
       return;
     }
     case Mouth::Yawn: {
-      // A big, slow yawn: a tall oval that opens and closes once every 2.4 s.
-      const float p = fminf(1, (now % 2400) / 1600.0f);
-      const float open = 0.55f + 0.45f * sinf(p * PI);
-      const float rx = w * 0.7f, ry = w * 1.1f * open;
+      // A big, slow yawn: a tall oval that opens wide and closes again, every 2.4 s
+      // from when the face began (now is the face's own clock), so it yawns on cue.
+      const float p = fminf(1, (now % 2400) / 1800.0f);
+      const float open = 0.5f + 0.5f * sinf(p * PI);
+      const float rx = w * 0.8f, ry = w * 1.25f * open;
       g.fillEllipse(ri(x), ri(y + 6), ri(rx), ri(ry), kLine);
       tongue(g, x, y + 6 + ry * 0.25f, y + 6 + ry, rx * 0.62f, [&](float yy, Span& s) {
         const float t = (yy - (y + 6)) / ry;

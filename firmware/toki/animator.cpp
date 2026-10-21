@@ -55,7 +55,10 @@ float FaceAnimator::rand() {
 Pose FaceAnimator::targetPose(uint32_t now) const {
   const Expression& to = expression(current_);
   Pose p = poseOf(to);
-  if (to.introMs && now - changedAt_ < to.introMs) p.shape = to.introShape;
+  if (to.introMs && now - changedAt_ < to.introMs) {
+    p.shape = to.introShape;
+    p.mouth = to.introMouth;
+  }
   return p;
 }
 

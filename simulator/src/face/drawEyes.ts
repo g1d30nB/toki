@@ -26,7 +26,8 @@ function lid(g: Gfx, e: Eye, y0: number, slope: number, coverAbove: boolean) {
   const yl = yAt(left);
   const yr = yAt(left + w);
   if (coverAbove) {
-    g.fillRect(left, top, w, Math.max(0, Math.min(yl, yr) - top), palette.face);
+    // One pixel of overlap with the triangle, so no soft seam shows between them.
+    g.fillRect(left, top, w, Math.max(0, Math.min(yl, yr) - top + 1), palette.face);
     g.fillTriangle(left, Math.min(yl, yr), left + w, Math.min(yl, yr), yl < yr ? left + w : left, Math.max(yl, yr), palette.face);
   } else {
     const bottom = top + h;

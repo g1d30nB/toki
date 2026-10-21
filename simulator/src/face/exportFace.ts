@@ -11,7 +11,7 @@ import { defaultTokens } from "./tokens";
 const SHAPES = ["round", "arc", "line", "sparkle", "spiral", "star", "sleep"] as const;
 const GAZES = ["still", "scan", "dart", "scroll-up", "look-around", "follow-www"] as const;
 const MOUTHS = ["none", "line", "smile", "o", "pout", "tongue", "wobble", "yawn", "open", "blep", "cat", "shout", "hmm"] as const;
-const MANPU: ManpuKind[] = ["dots", "sweat", "magnifier", "www", "sparkles", "blush", "zzz", "question"];
+const MANPU: ManpuKind[] = ["dots", "sweat", "magnifier", "www", "sparkles", "blush", "zzz", "question", "wifi", "wifiOn", "tear"];
 
 const camel = (s: string) => s.replace(/-(\w)/g, (_, c: string) => c.toUpperCase());
 const pascal = (s: string) => camel(s).replace(/^\w/, (c) => c.toUpperCase());
@@ -23,7 +23,9 @@ function enumBlock(name: string, values: readonly string[]) {
 
 function expressionLiteral(id: string, e: Expression) {
   const manpu = e.manpu.length ? e.manpu.map((m) => `Manpu_${pascal(m)}`).join(" | ") : "0";
-  const intro = e.intro ? `EyeShape::${pascal(e.intro.shape)}, ${e.intro.ms}` : `EyeShape::${pascal(e.shape)}, 0`;
+  const intro = e.intro
+    ? `EyeShape::${pascal(e.intro.shape)}, ${e.intro.ms}, Mouth::${pascal(e.intro.mouth ?? e.mouth)}`
+    : `EyeShape::${pascal(e.shape)}, 0, Mouth::${pascal(e.mouth)}`;
   return [
     `  /* ${id} */ {`,
     `    EyeShape::${pascal(e.shape)}, ${intro},`,
@@ -88,6 +90,7 @@ export function exportFaceHeader(): string {
     "  EyeShape shape;",
     "  EyeShape introShape; // shown first for introMs (0 = none)",
     "  uint16_t introMs;",
+    "  Mouth introMouth; // the mouth during the intro",
     "  float scale, roundness, open, smile, squint;",
     "  Vec2 pupil;",
     "  float pupilScale, highlight;",

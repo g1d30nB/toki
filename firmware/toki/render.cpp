@@ -455,7 +455,7 @@ bool FaceRenderer::draw(M5Canvas& g, const FaceInput& in, uint32_t now, const To
   drawCheeks(g, face, tk);
 
   drawEyes(g, face, tk, now);
-  drawMouth(g, face, tk, now);
+  drawMouth(g, face, tk, now - anim_.since());  // mouths time their motion from when the face began
   Eye eyes[2];
   eyeLayout(face, tk, eyes);
   minis_.draw(g, now, tk, eyes);

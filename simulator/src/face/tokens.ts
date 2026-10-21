@@ -52,6 +52,7 @@ export type FaceTokens = {
   zzzRise: number; // px each letter climbs above the last
   zzzCycleMs: number; // pop in one by one, hold, fade, repeat
   zzzFirstUp: number; // the first, smallest z sits this much higher (face review, 21 Oct)
+  tearMs: number; // sleepy: how long the yawn tears show (the yawn's intro is 2 s)
   sparkleLarge: number; // done: star radii, px (the smallest stays 8 px or more across)
   sparkleMid: number;
   sparkleSmall: number;
@@ -190,6 +191,7 @@ export const defaultTokens: FaceTokens = {
   zzzRise: 18,
   zzzCycleMs: 3_000,
   zzzFirstUp: 7,
+  tearMs: 2_000,
   sparkleLarge: 11.5,
   sparkleMid: 8,
   sparkleSmall: 5.5,
@@ -237,7 +239,7 @@ export const defaultTokens: FaceTokens = {
   manpuInMs: 120,
   manpuOutMs: 200,
   longTurnMin: 10,
-  mouthY: 50,
+  mouthY: 60, // below the line across the cheeks (face review, 21 Oct; was 50)
   mouthWidth: 34,
   mouthWeight: 2.6,
   mouthX: 0,
@@ -324,6 +326,7 @@ export const tokenRanges: Partial<Record<keyof FaceTokens, [number, number, numb
   zzzRise: [0, 20, 1],
   zzzCycleMs: [1_500, 6_000, 100],
   zzzFirstUp: [0, 20, 1],
+  tearMs: [500, 4_000, 100],
   sparkleLarge: [5, 16, 0.5],
   sparkleMid: [4, 12, 0.5],
   sparkleSmall: [4, 10, 0.5],

@@ -150,7 +150,8 @@ export class FaceRenderer {
 
     drawCheeks(g, face, tk);
     drawEyes(g, face, tk, wallMs);
-    if (lab.mouth !== false) drawMouth(g, face, tk, wallMs);
+    // Mouths time their motion from when the face began (the yawn yawns once, on cue).
+    if (lab.mouth !== false) drawMouth(g, face, tk, wallMs - this.anim.since);
     this.minis.draw(g, wallMs, tk, eyeLayout(face, tk));
 
     // Long turn (spec §4.2): past longTurnMin, a sweat drop appears and grows to double size.

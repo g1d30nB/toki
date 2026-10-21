@@ -34,6 +34,9 @@ constexpr uint16_t Manpu_Sparkles = 1u << 4;
 constexpr uint16_t Manpu_Blush = 1u << 5;
 constexpr uint16_t Manpu_Zzz = 1u << 6;
 constexpr uint16_t Manpu_Question = 1u << 7;
+constexpr uint16_t Manpu_Wifi = 1u << 8;
+constexpr uint16_t Manpu_WifiOn = 1u << 9;
+constexpr uint16_t Manpu_Tear = 1u << 10;
 
 struct Tokens {
   float eyeY;
@@ -81,6 +84,7 @@ struct Tokens {
   float zzzRise;
   float zzzCycleMs;
   float zzzFirstUp;
+  float tearMs;
   float sparkleLarge;
   float sparkleMid;
   float sparkleSmall;
@@ -214,6 +218,7 @@ constexpr Tokens kTokens = {
   18.0f, // zzzRise
   3000.0f, // zzzCycleMs
   7.0f, // zzzFirstUp
+  2000.0f, // tearMs
   11.5f, // sparkleLarge
   8.0f, // sparkleMid
   5.5f, // sparkleSmall
@@ -261,7 +266,7 @@ constexpr Tokens kTokens = {
   120.0f, // manpuInMs
   200.0f, // manpuOutMs
   10.0f, // longTurnMin
-  50.0f, // mouthY
+  60.0f, // mouthY
   34.0f, // mouthWidth
   2.6f, // mouthWeight
   0.0f, // mouthX
@@ -331,6 +336,7 @@ struct Expression {
   EyeShape shape;
   EyeShape introShape; // shown first for introMs (0 = none)
   uint16_t introMs;
+  Mouth introMouth; // the mouth during the intro
   float scale, roundness, open, smile, squint;
   Vec2 pupil;
   float pupilScale, highlight;
@@ -353,7 +359,7 @@ constexpr const char* kExpressionNames[] = { "idle", "think", "read", "search", 
 
 constexpr Expression kExpressions[] = {
   /* idle */ {
-    EyeShape::Round, EyeShape::Round, 0,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::Smile,
     1.0f, 1.0f, 1.0f, 0.42f, 0.0f,
     {0.0f, 0.0f}, 1.0f, 1.0f,
     Gaze::LookAround,
@@ -364,7 +370,7 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* think */ {
-    EyeShape::Round, EyeShape::Round, 0,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::Hmm,
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {-0.55f, -0.6f}, 1.0f, 1.0f,
     Gaze::Still,
@@ -375,7 +381,7 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* read */ {
-    EyeShape::Round, EyeShape::Round, 0,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::Line,
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.1f}, 1.0f, 1.0f,
     Gaze::Scan,
@@ -386,7 +392,7 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* search */ {
-    EyeShape::Round, EyeShape::Round, 0,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::Line,
     1.0f, 1.0f, 0.75f, 0.0f, 0.35f,
     {0.0f, 0.0f}, 0.85f, 1.0f,
     Gaze::Dart,
@@ -397,7 +403,7 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* edit */ {
-    EyeShape::Round, EyeShape::Round, 0,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::Blep,
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.1f, 0.35f}, 1.0f, 1.0f,
     Gaze::Still,
@@ -408,7 +414,7 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* run */ {
-    EyeShape::Round, EyeShape::Round, 0,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::Line,
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {-0.2f, -0.65f}, 1.0f, 1.0f,
     Gaze::ScrollUp,
@@ -419,7 +425,7 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* test */ {
-    EyeShape::Round, EyeShape::Round, 0,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::Wobble,
     1.0f, 1.0f, 0.85f, 0.0f, 0.0f,
     {0.0f, 0.1f}, 1.0f, 1.0f,
     Gaze::Still,
@@ -430,7 +436,7 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* web */ {
-    EyeShape::Round, EyeShape::Round, 0,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::O,
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {1.0f, -1.0f}, 1.0f, 1.0f,
     Gaze::FollowWww,
@@ -441,7 +447,7 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* subagent */ {
-    EyeShape::Round, EyeShape::Round, 0,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::O,
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.0f}, 0.9f, 1.0f,
     Gaze::Still,
@@ -452,7 +458,7 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* working */ {
-    EyeShape::Round, EyeShape::Round, 0,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::Line,
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.1f}, 1.0f, 1.0f,
     Gaze::Still,
@@ -463,7 +469,7 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* blocked */ {
-    EyeShape::Round, EyeShape::Round, 0,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::None,
     1.18f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, -0.25f}, 1.1f, 1.2f,
     Gaze::Still,
@@ -474,7 +480,7 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* done */ {
-    EyeShape::Arc, EyeShape::Arc, 0,
+    EyeShape::Arc, EyeShape::Arc, 0, Mouth::Cat,
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.0f}, 1.0f, 1.0f,
     Gaze::Still,
@@ -485,18 +491,18 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* error */ {
-    EyeShape::Round, EyeShape::Spiral, 3000,
+    EyeShape::Round, EyeShape::Spiral, 3000, Mouth::Shout,
     1.0f, 1.0f, 0.82f, 0.0f, 0.0f,
     {0.0f, 0.2f}, 1.0f, 1.0f,
     Gaze::Still,
     {-1.0f, -26.0f, 0.0f, 1.15f, 0.0f},
-    Mouth::Shout, 6.0f,
+    Mouth::Shout, 0.0f,
     0,
     1.0f, 1.0f, true, 0.0f,
     1.0f, false, 22.0f,
   },
   /* approved */ {
-    EyeShape::Line, EyeShape::Line, 0,
+    EyeShape::Line, EyeShape::Line, 0, Mouth::Open,
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.0f}, 1.0f, 1.0f,
     Gaze::Still,
@@ -507,7 +513,7 @@ constexpr Expression kExpressions[] = {
     1.25f, false, 0.0f,
   },
   /* denied */ {
-    EyeShape::Round, EyeShape::Round, 0,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::Pout,
     1.0f, 1.0f, 0.75f, 0.0f, 0.0f,
     {0.0f, 0.2f}, 1.0f, 1.0f,
     Gaze::Still,
@@ -518,7 +524,7 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* asked */ {
-    EyeShape::Round, EyeShape::Round, 0,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::None,
     1.12f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, -0.25f}, 1.1f, 1.2f,
     Gaze::Still,
@@ -529,29 +535,29 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* boop */ {
-    EyeShape::Line, EyeShape::Round, 280,
+    EyeShape::Line, EyeShape::Round, 280, Mouth::Open,
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.0f}, 0.85f, 1.0f,
     Gaze::Still,
     {9.0f, 4.0f, 0.0f, 1.0f, -1.0f},
-    Mouth::Open, 5.0f,
+    Mouth::Open, 0.0f,
     0,
     1.0f, 1.0f, false, 0.0f,
     1.25f, false, 0.0f,
   },
   /* quiet */ {
-    EyeShape::Sleep, EyeShape::Sleep, 0,
+    EyeShape::Sleep, EyeShape::Sleep, 0, Mouth::Smile,
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.0f}, 1.0f, 1.0f,
     Gaze::Still,
     {-2.0f, 0.0f, 0.0f, 0.85f, -1.0f},
-    Mouth::Smile, 5.0f,
+    Mouth::Smile, 0.0f,
     Manpu_Zzz,
     1.0f, 1.0f, false, 0.0f,
     1.0f, true, 0.0f,
   },
   /* closeAsk */ {
-    EyeShape::Round, EyeShape::Round, 0,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::Smile,
     1.0f, 1.0f, 1.0f, 0.12f, 0.0f,
     {0.0f, -0.25f}, 1.05f, 1.15f,
     Gaze::Still,
@@ -562,7 +568,7 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* closed */ {
-    EyeShape::Star, EyeShape::Star, 0,
+    EyeShape::Star, EyeShape::Star, 0, Mouth::Open,
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.0f}, 1.0f, 1.0f,
     Gaze::Still,
@@ -573,18 +579,18 @@ constexpr Expression kExpressions[] = {
     1.2f, false, 0.0f,
   },
   /* sleepy */ {
-    EyeShape::Sleep, EyeShape::Sleep, 0,
-    1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-    {0.0f, 0.0f}, 1.0f, 1.0f,
+    EyeShape::Round, EyeShape::Line, 2000, Mouth::Yawn,
+    1.0f, 1.0f, 0.42f, 0.0f, 0.0f,
+    {0.0f, 0.6f}, 1.0f, 1.0f,
     Gaze::Still,
-    {-3.0f, 5.0f, 0.0f, 0.85f, -1.0f},
-    Mouth::Yawn, 0.0f,
-    0,
-    1.0f, 1.0f, false, 0.0f,
-    1.0f, true, 0.0f,
+    {-4.0f, 0.0f, 0.0f, 0.85f, -1.0f},
+    Mouth::Smile, 0.0f,
+    Manpu_Tear,
+    0.5f, 2.0f, false, 0.0f,
+    0.7f, false, -14.0f,
   },
   /* night */ {
-    EyeShape::Sleep, EyeShape::Sleep, 0,
+    EyeShape::Sleep, EyeShape::Sleep, 0, Mouth::None,
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, 0.0f}, 1.0f, 1.0f,
     Gaze::Still,

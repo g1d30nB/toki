@@ -41,6 +41,15 @@ void dots(Ctx& c) {
   }
 }
 
+/** A water drop pointing up, its round part centred R below (x, y): navy outline, water blue, a shine. */
+void drop(M5Canvas& g, float x, float y, float R) {
+  g.fillCircle(ri(x), ri(y + R), ri(R + 2), kLine);
+  g.fillTriangle(ri(x - R - 1.5f), ri(y + R * 0.7f), ri(x + R + 1.5f), ri(y + R * 0.7f), ri(x), ri(y - R * 1.5f), kLine);
+  g.fillCircle(ri(x), ri(y + R), ri(R), kWater);
+  g.fillTriangle(ri(x - R), ri(y + R * 0.75f), ri(x + R), ri(y + R * 0.75f), ri(x), ri(y - R * 1.2f), kWater);
+  g.fillCircle(ri(x - R * 0.35f), ri(y + R * 0.75f), ri(R * 0.28f), kShine);
+}
+
 void sweat(Ctx& c) {
   // Sweat drop at the right temple: slides in, bobs gently; grows on a long turn.
   const Eye& r = c.eyes[1];
@@ -48,12 +57,15 @@ void sweat(Ctx& c) {
   const float slide = easeOut(clamp01(c.t / c.tk.sweatSlideMs));
   const float x = r.cx + r.rx + c.tk.outline + 8 * c.tk.manpuScale;
   const float y = r.cy - r.ry * 0.9f - (1 - slide) * 18 + sinf(c.t / 600) * 1.5f;
-  const float R = 7 * s;
-  c.g.fillCircle(ri(x), ri(y + R), ri(R + 2), kLine);
-  c.g.fillTriangle(ri(x - R - 1.5f), ri(y + R * 0.7f), ri(x + R + 1.5f), ri(y + R * 0.7f), ri(x), ri(y - R * 1.5f), kLine);
-  c.g.fillCircle(ri(x), ri(y + R), ri(R), kWater);
-  c.g.fillTriangle(ri(x - R), ri(y + R * 0.75f), ri(x + R), ri(y + R * 0.75f), ri(x), ri(y - R * 1.2f), kWater);
-  c.g.fillCircle(ri(x - R * 0.35f), ri(y + R * 0.75f), ri(R * 0.28f), kShine);
+  drop(c.g, x, y, 7 * s);
+}
+
+void tear(Ctx& c) {
+  // Yawn tears (sleepy): a small water-blue drop at the outer corner of each eye,
+  // welling up during the yawn and gone once it's over (tearMs).
+  const float k = fminf(clamp01(c.t / 300), clamp01((c.tk.tearMs - c.t) / 300));
+  if (k <= 0.05f) return;
+  for (const Eye& e : c.eyes) drop(c.g, e.cx + e.side * e.rx * 1.02f, e.cy + e.ry * 0.05f, 4.2f * k);
 }
 
 // --- Magnifier ---------------------------------------------------------------
@@ -248,7 +260,7 @@ void wifiMark(Ctx& c, bool on) {
 void wifi(Ctx& c) { wifiMark(c, false); }
 void wifiOn(Ctx& c) { wifiMark(c, true); }
 
-const DrawFn kDraw[kManpuKinds] = {dots, sweat, magnifier, www, sparkles, blush, zzz, question, wifi, wifiOn};
+const DrawFn kDraw[kManpuKinds] = {dots, sweat, magnifier, www, sparkles, blush, zzz, question, wifi, wifiOn, tear};
 
 }  // namespace
 
