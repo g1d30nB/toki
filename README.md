@@ -8,7 +8,7 @@ Toki runs on an [M5Stack StackChan](https://docs.m5stack.com/en/StackChan) (the 
 
 ## What it does
 
-- **A face that follows Claude.** Each kind of work has its own expression and a small manga symbol: a magnifier for searching, a sweat drop for tests, "www" for the web, little faces for subagents. Under the face, a label says what Claude is working on (`READING · render.ts`), if you want it.
+- **A face that follows Claude.** A kawaii face, drawn live on a cream screen: big shiny eyes, pink cheeks, a tongue when it concentrates. Each kind of work has its own expression and a small manga symbol: a magnifier for searching, a sweat drop for tests, "www" for the web, little faces for subagents. Under the face, a label says what Claude is working on (`READING · render.ts`), if you want it.
 - **Approvals on the robot.** Allow or Deny on the touchscreen; hold Allow for "Always allow" when Claude offers a rule. Questions stay in Claude, where you can read them.
 - **A body that only moves when it matters.** The servos are loud, so the head moves for interruptions only: it rises when Claude is waiting for you, nods when you approve, and wiggles when you close the day.
 - **Your day, closed.** Long-press the face at the end of the day and a shop shutter comes down over Toki. Tap to open it again.

@@ -1,8 +1,9 @@
 ---
 title: Peripheral Vision, behaviour spec
 project: StackChan Robot
-status: draft v0.5
-updated: 2026-10-03 (web face: the "www" wave replaces the globe; subagents: spawned mini eyes; done: sparkles replace the music note)
+status: draft v0.6
+updated: 2026-10-21 (the kawaii face: dark features on a cream screen, §7.5)
+changes_from_v0.5: the kawaii face, from Gideon's reference sheet and four review rounds on the robot (21 Oct): solid navy eyes with white shines, crescent brows, pink cheeks on every face, bolder mouths with shaped tongues, a cream screen; sleepy's yawn; §4.1, §4.2, §7.2, §7.3 and the new §7.5
 changes_from_v0.4: Phase 1 findings on the hardware. Cowork is absent from the Buddy stream; tool types arrive near real time via Buddy; plan and auto mode come from hooks; context fill only via the status-line feed; servo noise measured and speed tokens added
 changes_from_v0.3: constraints generalised beyond my desk; day boundaries (how the robot knows the day has ended and that I'm back) via a closing ritual, Mac system events and presence; NFC autonomy cards moved to "Later"; metallic and holo rarity stickers
 changes_from_v0.2: sticker-bomb scrapbook replaces photo strips; visual references (folklore / street sticker art leads, pastel purikura is secondary); sticker catalogue; art pipeline; optional agent "cast"
@@ -134,11 +135,11 @@ The face is the primary channel. It's built from a small kit of parts, so there 
 
 | Part | Variables |
 |---|---|
-| **Eyes** | open amount, shape (round, arc/happy, line, wide, spiral, sparkle, star), pupil position, size |
-| **Eyelids** | top-lid angle (sleepy, focused, sceptical) |
-| **Brows** | height, angle, per side (worried, determined, surprised, sceptical) |
-| **Mouth** | line, smile, open, "o", wobble, tongue-out, pout |
-| **Cheeks** | blush lines, puffed |
+| **Eyes** | open amount, shape (round, arc/happy, line > <, spiral, sleep, star), where they look, size. Since 21 Oct a solid navy disc with white shines (three when fully round, two when narrowed); looking moves the whole eye |
+| **Eyelids** | open amount, a flat cut with no line; tilt (cross, drowsy); smiling lower lids; lashes on closed eyes |
+| **Brows** | height, angle, length, curve, per side: small navy crescents (worried, determined, surprised, sceptical) |
+| **Mouth** | line, smile, pout, filled "o", cat ω, open smile with a tongue, the tongue out of one side, shout, yawn, wobble |
+| **Cheeks** | soft pink blush on every face, stronger on happy ones |
 | **Manpu (漫符)** | overlay symbols: sweat drop, anger vein, sparkles, "?", "!", "…", "zzz", spiral, music note, speed lines, puff clouds, "www" |
 | **Props** | tiny extras: fan, magnifying glass, coffee cup, sleeping cap *(use sparingly)* |
 
@@ -150,30 +151,30 @@ Manga's visual symbols were designed to read instantly at small sizes and a glan
 |---|---|---|
 | Idle, no sessions | half-lidded, slow blinks, occasional look around | loop |
 | **Reading files** | eyes scanning left and right in short sweeps | loop |
-| **Searching (grep/glob)** | squint, pupils darting, small magnifying glass | loop |
-| **Web search / fetch** | eyes up and out to the top-right corner, drifting left to right in time with a **"www" wave**: three hand-drawn Ws in the clear corner above the right brow, right-aligned, lifting in turn (W1, then W2 as W1 settles, then W3; 1.5 s wave + 0.5 s pause *(tune)*, lift 5 px). Each W is a four-stroke polyline with round caps, 17 px wide, stroke 3.5 px *(tune)*; on the robot, one pre-rendered W sprite pushed three times. No lens-like shapes: those belong to search. Oval eyes, open "o" mouth, one flat brow and one raised. | loop |
-| **Editing / writing** | focused lids, tongue poking out at the corner | loop |
-| **Running a command** | eyes follow imaginary text scrolling upwards | loop |
-| **Tests running** | nervous brows, a small sweat drop appears | loop |
+| **Searching (grep/glob)** | squint, eyes darting, small magnifying glass (water blue, no glare), a small smile | loop |
+| **Web search / fetch** | eyes up and out to the top-right corner, drifting left to right in time with a **"www" wave**: three hand-drawn Ws in the clear corner above the right brow, right-aligned, lifting in turn (W1, then W2 as W1 settles, then W3; 1.5 s wave + 0.5 s pause *(tune)*, lift 5 px). Each W is a four-stroke polyline with round caps, 17 px wide, stroke 3.5 px *(tune)*; on the robot, one pre-rendered W sprite pushed three times. No lens-like shapes: those belong to search. Round eyes, a flat mouth, one flat brow and one raised. | loop |
+| **Editing / writing** | a smile with the tongue out of one side, tilted 7° outwards, its top trimmed to the smile line | loop |
+| **Running a command** | eyes follow imaginary text scrolling upwards; a slight frown of concentration, a small smile | loop |
+| **Tests running** | nervous brows, lids a little lowered, a water-blue sweat drop | loop |
 | **Tests pass** | **star eyes** (the eyes themselves turn to stars) and a burst of **gold** (mustard) sparkles spread round the face. Big and bold, so it can't be mistaken for done's small cream cluster. | one-shot, then back to working |
-| **Tests fail / error** | spinning spiral eyes for 3 s, then > < with cross brows and a pout; held 4 s in all *(tune)* | one-shot, held longer (see rules) |
+| **Tests fail / error** | spinning spiral eyes for 3 s, then cross: lids slanting down to the nose, long straight slanted brows, an open shout with a tongue; held 4 s in all *(tune)* | one-shot, held longer (see rules) |
 | **Retrying after an error** | determined brows, a small puff of effort | loop |
-| **Subagents running** | **spawned minis**: one little face per running subagent (a pair of mini eyes with little brows), **capped at four** visible. Mini eyes are iris and pupil only (no highlight, no ring), so they read as spawn, not clones; each eye at least 14 px across (15 px *(tune)*). They land in four hand-placed spots that look scattered, close to the eyes (below and outside each eye, near the mouth, beside the left eye), each with its own slight tilt and size; clear of the brows and mouth, never overlapping the main eyes or each other. Spots are fixed per arrival order, so the face never reshuffles *(tune: miniS1..4)*. Each pops in with a squash and stretch (180 ms, staggered 70 ms when several arrive), blinks on its own timer, leans its gaze towards Toki and now and then glances at the main eyes. Toki's eyes shrink by 10% while any mini is present, and glance at each new one before settling. When a subagent finishes, its mini pops out (a small swell, then a quick shrink, 160 ms); when the last one goes, the eyes ease back to full size and the face returns to the state underneath. Minis show on any face except blocked, where the hint and buttons need the lower edge. The subagent pose (brows up a little, "o" mouth) shows while Toki is only waiting on them. Count source: Agent tool calls and their results in the Buddy stream; hooks' SubagentStart/SubagentStop in Phase 4. *(Caveat: a background subagent returns its result at once.)* | loop, per subagent |
+| **Subagents running** | **spawned minis**: one little face per running subagent (a pair of mini eyes with little brows), **capped at four** visible. Mini eyes are small navy discs with one white shine (since 21 Oct), so they read as spawn, not clones; each eye at least 14 px across (15 px *(tune)*). They land in four hand-placed spots that look scattered, close to the eyes (below and outside each eye, near the mouth, beside the left eye), each with its own slight tilt and size; clear of the brows and mouth, never overlapping the main eyes or each other. Spots are fixed per arrival order, so the face never reshuffles *(tune: miniS1..4)*. Each pops in with a squash and stretch (180 ms, staggered 70 ms when several arrive), blinks on its own timer, leans its gaze towards Toki and now and then glances at the main eyes. Toki's eyes shrink by 10% while any mini is present, and glance at each new one before settling. When a subagent finishes, its mini pops out (a small swell, then a quick shrink, 160 ms); when the last one goes, the eyes ease back to full size and the face returns to the state underneath. Minis show on any face except blocked, where the hint and buttons need the lower edge. The subagent pose (brows up a little, lids a little lowered, eyes down towards the minis, a filled "o" mouth) shows while Toki is only waiting on them. Count source: Agent tool calls and their results in the Buddy stream; hooks' SubagentStart/SubagentStop in Phase 4. *(Caveat: a background subagent returns its result at once.)* | loop, per subagent |
 | **Long turn (> 10 min *(tune)*)** | sweat drop grows, then the fan prop | escalating loop |
 | **Context filling** | cheeks slowly puff: *full* | continuous, mapped to fill level *(depends on the status-line feed; fallback: CONTEXT FULL on compaction only)* |
-| **Blocked: needs approval** | big patient eyes, brows raised, "…" | loop, plus the head moves (§5) |
-| **Blocked: asked a question** | blocked's big patient eyes with one brow raised (the head-tilt *pose*), a big teal "?" badge where blocked has its "…", and one line, "Question for you in Claude" (regular weight). **Answered in Claude, never on Toki** (Gideon, 3 Oct): no buttons, taps do nothing | loop, plus the head moves |
+| **Blocked: needs approval** | big patient eyes, brows raised, "…", a small smile | loop, plus the head moves (§5) |
+| **Blocked: asked a question** | blocked's big patient eyes with one brow raised (the head-tilt *pose*), a big drawn water-blue "?" floating between the brows (no badge since 21 Oct), a small smile, and one line, "Question for you in Claude" (regular weight, on the label line). **Answered in Claude, never on Toki** (Gideon, 3 Oct): no buttons, taps do nothing | loop, plus the head moves |
 | **Ignored for 5 min *(tune)*** | a tiny pout, then back to patient | one-shot |
-| **Done** | happy arc eyes, small smile, and **sparkles**: three cream four-point stars (large 18 px, medium 13 px, small 9 px *(tune)*) in a loose cluster to the right of the right eye arc, clear of the brow and the arc. Each star has slightly concave sides and softly rounded tips (no glyph); on the robot, one pre-rendered star sprite at three scales. They pop in largest first (0 → 120% → 100% over 200 ms, staggered 120 ms), twinkle on their own periods (1.1 / 1.5 / 1.9 s, ±12%), then fade together (400 ms, stepping the colour to the navy ground) after 10 s, lingering over the next face; blocked or an error clears them at once. Stays the eyes' own shape, cream and small; tests pass changes the eyes and uses gold. | one-shot |
-| **I approve** | happy squint, blush | one-shot |
+| **Done** | happy arc eyes, a cat's ω mouth, and **sparkles**: three mustard four-point stars (cream before the cream screen) (large 18 px, medium 13 px, small 9 px *(tune)*) in a loose cluster to the right of the right eye arc, clear of the brow and the arc. Each star has slightly concave sides and softly rounded tips (no glyph); on the robot, one pre-rendered star sprite at three scales. They pop in largest first (0 → 120% → 100% over 200 ms, staggered 120 ms), twinkle on their own periods (1.1 / 1.5 / 1.9 s, ±12%), then fade together (400 ms, stepping the colour to the navy ground) after 10 s, lingering over the next face; blocked or an error clears them at once. Stays the eyes' own shape, cream and small; tests pass changes the eyes and uses gold. | one-shot |
+| **I approve** | the squeeze > <, an open smile with a tongue, cheeks flushed | one-shot |
 | **I deny** | a respectful "oh, okay" mouth, then neutral | one-shot |
-| **Tap on the face (a boop)** | surprised wide eyes (280 ms), then a giggle squint while the whole face hops three times, each hop smaller, like shoulders shaking with a laugh (7 px, 540 ms *(tune)*) | one-shot |
+| **Tap on the face (a boop)** | surprised wide eyes (280 ms), then the squeeze > < and an open smile while the whole face hops three times, each hop smaller, like shoulders shaking with a laugh (7 px, 540 ms *(tune)*) | one-shot |
 | **I leave the desk** (§3.4) | watches me go, then sleepy | transition |
 | **Welcome back** (§3.4) | wide eyes, "!", then a greeting smile | one-shot |
 | **Quiet mode** (double-tap) | eyes closed, content smile, "zZZZ" floating up the right side, small to big (Gideon, 3 Oct; was "shh") | loop for 30 min *(tune)*, or until a tap |
-| **"Close the day?"** (long-press) | hopeful eyes above two booth buttons | waits for an answer |
+| **"Close the day?"** (long-press) | hopeful eyes and a smile above two booth buttons (Close in the cheeks' pink) | waits for an answer |
 | **Day closed, earned** | star eyes, sparkles, the shutter comes down | one-shot, plus the celebration spin |
-| **Day closed, quiet** | a soft yawn, the shutter comes most of the way down (80%), sleeping eyes peeking out below | one-shot, no servo |
+| **Day closed, quiet** | **sleepy, not sorry** (21 Oct): a 2 s yawn, eyes squeezed > < with a water-blue tear at each outer corner and a big round mouth; then heavy lids drooping to the outer corners, eyes down, a small smile, fainter cheeks, as the shutter comes most of the way down (80%); then asleep, peeking out below. Never disappointed: closing without a finished turn is fine | one-shot, no servo |
 | **Night** | yawn, "zzz", then sleep | loop |
 | **Disconnected** (no link to the Claude app for 5 s *(tune)*) | a small Bluetooth symbol with a tomato cross, top left, over any face (Gideon, 3 Oct). Top right belongs to the manpu. An approval can't arrive while it shows, so it must never go unnoticed. | loop, while the link is down |
 | **Visitor wave (website)** | quick glance at the camera, eyes smile, sparkle | one-shot |
@@ -287,12 +288,12 @@ All references are someone else's artwork. Take principles from them, never copy
 
 **Starting position:** B, with A as the fallback if B is too busy at the edge of vision. Whichever wins must also work as **stickers** (§9), because the face is the scrapbook's raw material.
 
-**Screen background:** a calm, dark navy for the everyday working face. The full graphic treatment (rays, dots, pattern, bubble lettering) is reserved for one-shot moments: done, the celebration, visitor waves. The decoration is the reward, not the resting state.
+**Screen background:** ~~a calm, dark navy for the everyday working face~~ **cream since 21 Oct** (the kawaii face, §7.5), dark features on it, as in the reference sheet. The full graphic treatment (rays, dots, pattern, bubble lettering) is reserved for one-shot moments: done, the celebration, visitor waves. The decoration is the reward, not the resting state.
 
 ### 7.3 Screen rules
 
 - 320 × 240, about 200 ppi, viewed from above and at an angle at the edge of vision.
-- A dark ground with large, high-contrast shapes. Nothing important within 12 px of the edge *(tune)*.
+- A cream ground (since 21 Oct; dark navy before) with large, high-contrast navy shapes. Nothing important within 12 px of the edge *(tune)*, except the label under the face, which sits about 8 px from the bottom (Gideon, 21 Oct).
 - Text only when I choose to look. Minimum 20 px *(test)*; one line; never scrolling.
 - Every expression must read in greyscale.
 - **Edges: hybrid** (decided 3 Oct after a test on the glass).
@@ -323,6 +324,19 @@ Animation principles to apply: anticipation, squash and stretch on the eyes, fol
 - **Measured (3 Oct):** sending a full 320 × 240 frame to the panel takes 34 ms (SPI at 40 MHz), so full-screen redraws cap at about 29 fps whatever the drawing.
 - The plan: redraw only the face region (23 ms to send), draw in internal RAM (smooth face 11 ms; PSRAM 23 ms), and overlap drawing the next frame with sending the last.
 - To confirm during the port.
+
+
+### 7.5 The kawaii face (21 Oct)
+
+Gideon's kawaii reference sheet, then four review rounds on the robot with the face tour (`bridge/tools/face-tour.py`, which holds any face over USB and notes comments per face).
+
+- **Cream screen** (`face` #fbf4e4, the scrapbook's paper) with navy features (`line` #1d2b53), white shines (`shine`), and **one colour outside the five: a soft pink** (`cheek` #f4899f) for cheeks and the Close button. **Water blue** (`water` #3fa2e2) for the sweat drop, yawn tears, the "?" and the magnifier.
+- **Eyes:** solid navy discs, no separate pupil (looking moves the whole eye). Three shines when fully round (big top left, medium right, small low); two once a lid narrows the eye, placed in what still shows. Lids are a flat cut, no line: on a solid eye a line only showed where it poked out.
+- **Brows:** small navy crescents, 40 px, thick in the middle and tapering to points; straight and slanted for cross.
+- **Mouths** sit below the line across the cheeks. Open mouths carry a shaped tongue: two humps with a navy split down the middle, sitting inside the mouth with navy all round.
+- **Faces read as positive while working:** small smiles on thinking, running, searching, blocked and asked; a slight frown of concentration on the plain working face.
+- **Stickers:** the scrapbook's face stickers are cut from the cream screen and set on a soft, round-cornered cream head (a mochi) with the cream die-cut border and ink edge. The app icon is the same face on a cream rounded square.
+- **Measured on the robot:** 21.6 fps at idle (draw 17.4 ms, push 27.5 ms), up from 19.0: solid eyes are cheaper to draw than rings, irises and pupils.
 
 ---
 
