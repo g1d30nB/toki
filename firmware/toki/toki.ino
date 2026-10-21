@@ -399,11 +399,32 @@ static void handleBridge(const String& line) {
 //   {"setup": "done"}   setup finished: "All set!" and a happy wiggle
 //   {"setup": "calibrate", "step": "home" | "release" | "save" | "resume"}
 //       head to home and hold / motors off to set it by hand / save as home / back to normal
+//   {"setup": "face", "name": "error", "ms": 60000}   the face tour (bridge/tools/face-tour.py):
+//       hold one expression for review; an unknown name ends the tour
 // The reply also says which firmware this is and whether the Claude app is paired.
 // ---------------------------------------------------------------------------
 static uint32_t allSetUntil = 0;  // "All set!" shows until then (setup's last step sends "done")
 static SetupScreen calibScreen = SetupScreen::None;  // the head check, while toki calibrate runs
 static uint32_t calibratedUntil = 0;                 // "That's home now" shows until then
+static ExpressionId tourFace = ExpressionId::Count;  // the face tour: this face, until tourUntil
+static uint32_t tourUntil = 0;
+static const uint32_t kTourSubagents[] = {1, 2, 3};
+
+/** The face tour overrides what Claude is doing, with invented examples for the chrome and label. */
+static void applyTour(FaceInput& in, uint32_t now) {
+  if (!tourUntil || (int32_t)(tourUntil - now) <= 0) return;
+  in.expression = tourFace;
+  in.setup = SetupScreen::None;
+  in.subagents = kTourSubagents;
+  in.subagentCount = tourFace == ExpressionId::Subagent ? 3 : 0;
+  in.promptTool = "Bash";
+  in.promptHint = "npm test";
+  in.always = "";
+  in.alwaysAsk = false;
+  in.questionHeader = "Which colour?";
+  in.shutter = tourFace == ExpressionId::Closed || tourFace == ExpressionId::Night ? 1 : tourFace == ExpressionId::Sleepy ? 0.8f : 0;
+  in.labelObject = tourFace == ExpressionId::Web ? "example.com" : tourFace == ExpressionId::Search ? "\"sparkles\"" : "sticker.ts";
+}
 
 /**
  * Toki's side of setup (Phase 7): which setup screen to show, from what's true on
@@ -485,6 +506,12 @@ static void handleUsbLine(const String& line) {
     }
     logf("setup: calibrate %s", step);
     setupReply("ok");
+  } else if (!strcmp(what, "face")) {
+    tourFace = ExpressionId::Count;
+    for (int i = 0; i < (int)ExpressionId::Count; i++)
+      if (!strcmp(kExpressionNames[i], d["name"] | "")) tourFace = (ExpressionId)i;
+    tourUntil = tourFace != ExpressionId::Count ? millis() + (uint32_t)(d["ms"] | 60000) : 0;
+    setupReply(tourFace != ExpressionId::Count ? "ok" : "ended");
   } else if (!strcmp(what, "forget")) {
     net::forget();
     setupReply("forgotten");
@@ -589,6 +616,7 @@ void loop() {
     in.questionHeader = state.questionHeader();
     in.labelMode = settings::get().label;
     in.labelObject = state.labelObject(in.expression);
+    applyTour(in, now);
     bottom = renderer.draw(canvas, in, now, kTokens);
   }
   const uint32_t t1 = micros();
