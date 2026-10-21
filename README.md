@@ -51,6 +51,10 @@ A diary of your days with Claude, in stickers. It fills itself as you work. Each
 - The **Claude desktop app** (for Bluetooth, through its Hardware Buddy) and **Claude Code**.
 - **2.4 GHz Wi-Fi** that your Mac shares. The robot can't use 5 GHz.
 
+<br clear="right">
+
+> **Before you start.** Toki is a personal project, shared as is. Installing it replaces your StackChan's firmware. Setup backs up the factory firmware first and `toki restore` puts it back, and M5Stack's own M5Burner can reinstall it too, so a robot should always be recoverable. But flashing firmware always carries some risk, and I can't promise support, fixes or compensation if something goes wrong. If you go ahead, it's at your own risk. Toki isn't made by or affiliated with M5Stack or Anthropic.
+
 <h2><img src="docs/images/heading-install.webp" height="84" alt="Install"></h2>
 
 ```bash
