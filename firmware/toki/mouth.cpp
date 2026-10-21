@@ -23,11 +23,25 @@ struct Span {
  */
 template <typename MouthSpan>
 void tongue(M5Canvas& g, float cx, float top, float bottom, float half, MouthSpan mouth, float inset) {
-  const float rr = half * 0.56f, d = half - rr;
+  const float rr = half * 0.46f, d = half - rr;  // two humps, just apart: a clear U notch
+  // The mouth shrunk by `inset` in every direction, so navy runs under and beside the tongue.
+  auto inner = [&](float y, Span& out) -> bool {
+    float l = -1e6f, r = 1e6f;
+    for (int i = -4; i <= 4; i++) {
+      const float dy = inset * i / 4;
+      Span m;
+      if (!mouth(y + dy, m)) return false;
+      const float k = sqrtf(inset * inset - dy * dy);
+      l = fmaxf(l, m.l + k);
+      r = fminf(r, m.r - k);
+    }
+    out = {l, r};
+    return r > l;
+  };
   auto spansAt = [&](float y, Span* out) -> int {
     Span m;
-    if (!mouth(y, m)) return 0;
-    const float l = m.l + inset, r = m.r - inset;
+    if (!inner(y, m)) return 0;
+    const float l = m.l, r = m.r;
     Span parts[2];
     int n = 1;
     parts[0] = {-1e6f, 1e6f};
@@ -40,6 +54,9 @@ void tongue(M5Canvas& g, float cx, float top, float bottom, float half, MouthSpa
       if (parts[0].r >= parts[1].l) {
         parts[0].r = parts[1].r;
         n = 1;
+      } else if (parts[1].l - parts[0].r < 1.2f) {
+        parts[0].r = cx - 0.6f;
+        parts[1].l = cx + 0.6f;
       }
     }
     int k = 0;
@@ -50,10 +67,9 @@ void tongue(M5Canvas& g, float cx, float top, float bottom, float half, MouthSpa
     return k;
   };
   Span prev[2], cur[2];
-  float prevY = top;
-  int np = spansAt(top, prev);
-  for (float y = top + 1; y < bottom + 1; y += 1) {
-    const float yy = fminf(y, bottom);
+  float prevY = roundf(top);
+  int np = spansAt(prevY, prev);
+  for (float yy = prevY + 1; yy <= roundf(bottom); yy += 1) {
     const int nc = spansAt(yy, cur);
     if (nc == np) {
       for (int i = 0; i < nc; i++) {
@@ -67,7 +83,7 @@ void tongue(M5Canvas& g, float cx, float top, float bottom, float half, MouthSpa
     np = nc;
     prevY = yy;
   }
-  g.drawWideLine(ri(cx), ri(top + rr * 0.55f), ri(cx), ri(top + (bottom - top) * 0.55f), fmaxf(0.8f, half * 0.07f), kTongueGroove);
+  g.drawWideLine(ri(cx), ri(top + rr * 0.6f), ri(cx), ri(top + (bottom - top) * 0.55f), fmaxf(1.1f, half * 0.1f), kTongueGroove);
 }
 }  // namespace
 
@@ -120,7 +136,7 @@ void drawMouth(M5Canvas& g, const AnimatedFace& f, const Tokens& tk, uint32_t no
         px = nx;
         py = ny;
       }
-      tongue(g, x, top + depth * 0.5f, top + depth, half * 0.62f, [&](float yy, Span& s) {
+      tongue(g, x, top + depth * 0.42f, top + depth, half * 0.62f, [&](float yy, Span& s) {
         const float t = (yy - top) / depth;
         if (t < 0 || t > 1) return false;
         const float hw = half * sqrtf(1 - t * t);
@@ -146,10 +162,12 @@ void drawMouth(M5Canvas& g, const AnimatedFace& f, const Tokens& tk, uint32_t no
       g.fillTriangle(ri(qx[0]), ri(qy[0]), ri(qx[2]), ri(qy[2]), ri(qx[3]), ri(qy[3]), kLine);
       // Rounded corners, as in the reference: the edge stroked with a round pen.
       for (int i = 0; i < 4; i++) line(qx[i], qy[i], qx[(i + 1) % 4], qy[(i + 1) % 4], r, kLine);
-      tongue(g, x, y + h * 0.6f - h * 0.52f, y + h * 0.6f + r * 0.5f, bw * 0.68f, [&](float yy, Span& s) {
+      // Humps as wide as the mouth where they sit, so the tongue fills it, as in the reference.
+      tongue(g, x, y + h * 0.6f - h * 0.55f, y + h * 0.6f + r, tw + (bw - tw) * 0.6f, [&](float yy, Span& s) {
+        // The stroke puts the true edge a pen's width outside the quad, below it too.
         const float t = (yy - (y - h * 0.4f)) / h;
-        if (t < 0 || t > 1) return false;
-        const float hw = tw + (bw - tw) * t + r * 0.5f;
+        if (t < 0 || yy > y + h * 0.6f + r) return false;
+        const float hw = tw + (bw - tw) * fminf(t, 1) + r;
         s = {x - hw, x + hw};
         return true;
       }, r);

@@ -69,7 +69,7 @@ export function drawMouth(g: Gfx, f: AnimatedFace, tk: FaceTokens, now: number) 
         const hw = half * Math.sqrt(1 - t * t);
         return [x - hw, x + hw];
       };
-      tongue(g, x, top + depth * 0.5, top + depth, half * 0.62, span, r);
+      tongue(g, x, top + depth * 0.42, top + depth, half * 0.62, span, r);
       return;
     }
     case "blep": {
@@ -96,12 +96,14 @@ export function drawMouth(g: Gfx, f: AnimatedFace, tk: FaceTokens, now: number) 
       // Rounded corners, as in the reference: the edge stroked with a round pen.
       for (let i = 0; i < 4; i++) g.drawWideLine(quad[i][0], quad[i][1], quad[(i + 1) % 4][0], quad[(i + 1) % 4][1], r, c);
       const span = (yy: number): Span | null => {
+        // The stroke puts the true edge a pen's width outside the quad, below it too.
         const t = (yy - (y - h * 0.4)) / h;
-        if (t < 0 || t > 1) return null;
-        const hw = tw + (bw - tw) * t + r * 0.5;
+        if (t < 0 || yy > y + h * 0.6 + r) return null;
+        const hw = tw + (bw - tw) * Math.min(t, 1) + r;
         return [x - hw, x + hw];
       };
-      tongue(g, x, y + h * 0.6 - h * 0.52, y + h * 0.6 + r * 0.5, bw * 0.68, span, r);
+      // Humps as wide as the mouth where they sit, so the tongue fills it, as in the reference.
+      tongue(g, x, y + h * 0.6 - h * 0.55, y + h * 0.6 + r, tw + (bw - tw) * 0.6, span, r);
       return;
     }
     case "tongue": {
@@ -154,8 +156,9 @@ type Span = [number, number];
  * ellipse): two rounded humps on top with a notch between them, a groove down the
  * middle, and a body that fills the bottom of the mouth, following its outline.
  * Drawn as thin horizontal slices from `top` to `bottom`, each the tongue's width
- * at that height cut to the mouth's (`mouth`, less `inset` so a rim of the mouth
- * stays). The robot draws the same slices with fillTriangle.
+ * at that height cut to the mouth's, shrunk by `inset` all round so navy runs
+ * cleanly under and beside it (Gideon). The robot draws the same slices with
+ * fillTriangle.
  */
 function tongue(
   g: Gfx,
@@ -166,13 +169,28 @@ function tongue(
   mouth: (y: number) => Span | null,
   inset: number,
 ) {
-  const rr = half * 0.56; // each hump's radius; the humps overlap, leaving a shallow notch
+  // Two humps, just apart, so the notch between them is a clear U (Gideon).
+  const rr = half * 0.46;
   const d = half - rr;
+  // The mouth shrunk by `inset` in every direction: at each height, the narrowest
+  // of the mouth's spans within `inset` above and below, less the disc's half-width there.
+  const inner = (y: number): Span | null => {
+    let l = -Infinity;
+    let r = Infinity;
+    for (let i = -4; i <= 4; i++) {
+      const dy = (inset * i) / 4;
+      const m = mouth(y + dy);
+      if (!m) return null;
+      const k = Math.sqrt(inset * inset - dy * dy);
+      l = Math.max(l, m[0] + k);
+      r = Math.min(r, m[1] - k);
+    }
+    return r > l ? [l, r] : null;
+  };
   const spansAt = (y: number): Span[] => {
-    const m = mouth(y);
+    const m = inner(y);
     if (!m) return [];
-    const l = m[0] + inset;
-    const r = m[1] - inset;
+    const [l, r] = m;
     let parts: Span[] = [[-Infinity, Infinity]];
     const dy = y - (top + rr);
     if (dy < 0) {
@@ -182,14 +200,14 @@ function tongue(
         [cx + d - hw, cx + d + hw],
       ];
       if (parts[0][1] >= parts[1][0]) parts = [[parts[0][0], parts[1][1]]];
+      else if (parts[1][0] - parts[0][1] < 1.2) parts = [[parts[0][0], cx - 0.6], [cx + 0.6, parts[1][1]]];
     }
     return parts.map(([a, b]): Span => [Math.max(a, l), Math.min(b, r)]).filter(([a, b]) => b > a);
   };
-  const step = 1;
-  let prevY = top;
-  let prev = spansAt(top);
-  for (let y = top + step; y < bottom + step; y += step) {
-    const yy = Math.min(y, bottom);
+  // Whole-pixel slices, as on the robot (half-pixel edges let the navy show through).
+  let prevY = Math.round(top);
+  let prev = spansAt(prevY);
+  for (let yy = prevY + 1; yy <= Math.round(bottom); yy++) {
     const cur = spansAt(yy);
     if (cur.length === prev.length) {
       cur.forEach((s, i) =>
@@ -208,5 +226,5 @@ function tongue(
     prevY = yy;
   }
   // The groove: from just under the notch, a little over half way down.
-  g.drawWideLine(cx, top + rr * 0.55, cx, top + (bottom - top) * 0.55, Math.max(0.8, half * 0.07), groove);
+  g.drawWideLine(cx, top + rr * 0.6, cx, top + (bottom - top) * 0.55, Math.max(1.1, half * 0.1), groove);
 }
