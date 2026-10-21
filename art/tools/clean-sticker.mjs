@@ -19,8 +19,9 @@
 //   2. every colour snaps to the palette (light greys to white, dark tones to navy,
 //      mid greys to the slate used for shading);
 //   3. one solid white silhouette goes under the whole design (every piece, drawn
-//      white with a round stroke), with a thin navy edge outside it, like the
-//      die-cut on Toki's face stickers. No gaps are possible.
+//      white with a round stroke), and a navy outline inside it hugging the art,
+//      like Toki's face and symbol stickers (Gideon, 21 Oct: the old thin navy edge
+//      outside the white read as a stray hairline). No gaps are possible.
 
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -111,18 +112,18 @@ for (const m of raw.matchAll(/<path\b([^>]*?)\/>/g)) {
   pieces.push({ d: short, transform, colour: hex(snap([+rgb[1], +rgb[2], +rgb[3]])) });
 }
 
-const border = Math.round(Math.min(vw, vh) * 0.022); // the white die-cut, beyond the design's own edge
-const edge = Math.round(Math.min(vw, vh) * 0.006); // the thin navy edge outside it
+const outline = Math.round(Math.min(vw, vh) * 0.022); // the navy outline round the design
+const border = Math.round(Math.min(vw, vh) * 0.04); // the white die-cut outside it
 const t = (p) => (p.transform && p.transform !== "translate(0,0)" ? ` transform="${p.transform}"` : "");
 // Pad the canvas so the new border never touches its edge.
-const pad = border + edge + 4;
+const pad = outline + border + 4;
 const out = [
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-pad} ${-pad} ${vw + 2 * pad} ${vh + 2 * pad}">`,
   `<!-- ${name}: generated with Recraft V4.1 SVG (raw/${name}.svg), cleaned by art/tools/clean-sticker.mjs. Art: all rights reserved, see art/LICENSE. -->`,
-  `<g fill="${hex(PALETTE.navy)}" stroke="${hex(PALETTE.navy)}" stroke-width="${2 * (border + edge)}" stroke-linejoin="round">`,
+  `<g fill="#ffffff" stroke="#ffffff" stroke-width="${2 * (outline + border)}" stroke-linejoin="round">`,
   ...pieces.map((p) => `<path${t(p)} d="${p.d}"/>`),
   `</g>`,
-  `<g fill="#ffffff" stroke="#ffffff" stroke-width="${2 * border}" stroke-linejoin="round">`,
+  `<g fill="${hex(PALETTE.navy)}" stroke="${hex(PALETTE.navy)}" stroke-width="${2 * outline}" stroke-linejoin="round">`,
   ...pieces.map((p) => `<path${t(p)} d="${p.d}"/>`),
   `</g>`,
   ...pieces.map((p) => `<path${t(p)} fill="${p.colour}" d="${p.d}"/>`),

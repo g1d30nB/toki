@@ -64,9 +64,9 @@ function grown(src: HTMLCanvasElement, r: number, colour: string): HTMLCanvasEle
  * Toki's face as a die-cut sticker (spec §9.4): rendered once per expression by
  * the robot's own face renderer, cut out of its screen, then given a sticker shape
  * round it. Kawaii pass (21 Oct; Gideon's sticker-sheet reference): the screen is
- * cream now, so the features are cut from it and set on a round cream body with a
- * navy outline, a warm shade along the bottom, a gloss highlight, and a white
- * die-cut border.
+ * cream now, so the features are cut from it and set on a round cream body (a
+ * circle, as in the reference; an oval didn't suit Toki) with a navy outline, a
+ * warm shade along the bottom, a gloss highlight, and a white die-cut border.
  */
 export function faceSticker(face: string): { url: string; aspect: number } {
   const hit = faceCache.get(face);
@@ -94,7 +94,7 @@ export function faceSticker(face: string): { url: string; aspect: number } {
 const OUTLINE = 8;
 const BORDER = 13;
 
-/** The face's features on a round cream body fitted round them, then trimmed. */
+/** The face's features on a round cream body fitted round them. */
 function mochi(cut: HTMLCanvasElement): { url: string; aspect: number } {
   const data = cut.getContext("2d")!.getImageData(0, 0, cut.width, cut.height).data;
   let x0 = cut.width, y0 = cut.height, x1 = 0, y1 = 0;
@@ -106,9 +106,15 @@ function mochi(cut: HTMLCanvasElement): { url: string; aspect: number } {
         if (y < y0) y0 = y;
         if (y > y1) y1 = y;
       }
-  // An oval round the features: the box's half-sizes, scaled out so its corners fit.
-  const rx = ((x1 - x0 + 1) / 2) * 1.1 + 4;
-  const ry = ((y1 - y0 + 1) / 2) * 1.38 + 6;
+  // A circle round the features: just past the furthest drawn pixel from their centre.
+  const fx = (x0 + x1 + 1) / 2;
+  const fy = (y0 + y1 + 1) / 2;
+  let far = 0;
+  for (let y = y0; y <= y1; y++)
+    for (let x = x0; x <= x1; x++)
+      if (data[(y * cut.width + x) * 4 + 3] > 8) far = Math.max(far, Math.hypot(x - fx, y - fy));
+  const rx = far + 10;
+  const ry = rx;
   const edge = OUTLINE + BORDER;
   const out = document.createElement("canvas");
   out.width = Math.ceil((rx + edge) * 2);
@@ -140,8 +146,33 @@ function mochi(cut: HTMLCanvasElement): { url: string; aspect: number } {
   g.arc(cx - rx * 0.42, cy - ry * 0.7, Math.max(2.5, ry * 0.04), 0, Math.PI * 2);
   g.fill();
   g.restore();
-  g.drawImage(cut, cx - (x0 + x1 + 1) / 2, cy - (y0 + y1 + 1) / 2);
+  g.drawImage(cut, cx - fx, cy - fy);
   return { url: out.toDataURL("image/png"), aspect: out.width / out.height };
+}
+
+/**
+ * The faces' shading on any drawing (Gideon, 21 Oct): a soft band along its lower
+ * right edges, where the light from the top left doesn't reach. The band is the
+ * drawing's silhouette less itself nudged up and left, laid over the drawing in a
+ * translucent navy (multiplied, so each colour darkens in its own hue).
+ */
+function shade(c: HTMLCanvasElement, dx = 7, dy = 11) {
+  const band = document.createElement("canvas");
+  band.width = c.width;
+  band.height = c.height;
+  const b = band.getContext("2d")!;
+  b.drawImage(c, 0, 0);
+  b.globalCompositeOperation = "source-in";
+  b.fillStyle = palette.line;
+  b.fillRect(0, 0, band.width, band.height);
+  b.globalCompositeOperation = "destination-out";
+  b.drawImage(c, -dx, -dy);
+  const g = c.getContext("2d")!;
+  g.save();
+  g.globalCompositeOperation = "multiply";
+  g.globalAlpha = 0.16;
+  g.drawImage(band, 0, 0);
+  g.restore();
 }
 
 /**
@@ -381,6 +412,7 @@ export function symbolSticker(kind: SymbolKind): { url: string; aspect: number }
       break;
     }
   }
+  shade(c);
   // Symbols are drawn big and shown small (about a third of a face's scale), so their
   // linework is heavier to match the faces' on the page.
   const result = dieCut(c, 9, 15);
