@@ -1,6 +1,6 @@
 import { renderCell } from "../dev/capture";
 import type { ExpressionId } from "../face/expressions";
-import { palette } from "../face/palette";
+import { mix, palette } from "../face/palette";
 import type { Moment, MomentKind } from "../state/moments";
 // The real stickers (art/: all rights reserved, see art/LICENSE).
 import alwaysArt from "../../../art/stickers/always.svg?url";
@@ -63,9 +63,10 @@ function grown(src: HTMLCanvasElement, r: number, colour: string): HTMLCanvasEle
 /**
  * Toki's face as a die-cut sticker (spec §9.4): rendered once per expression by
  * the robot's own face renderer, cut out of its screen, then given a sticker shape
- * round it. Kawaii pass (21 Oct): the screen is cream now, so the features are cut
- * from it and set on a soft, round-cornered cream head (a mochi, and a nod to the
- * robot's screen), with a cream die-cut border and a thin ink edge.
+ * round it. Kawaii pass (21 Oct; Gideon's sticker-sheet reference): the screen is
+ * cream now, so the features are cut from it and set on a round cream body with a
+ * navy outline, a warm shade along the bottom, a gloss highlight, and a white
+ * die-cut border.
  */
 export function faceSticker(face: string): { url: string; aspect: number } {
   const hit = faceCache.get(face);
@@ -89,7 +90,11 @@ export function faceSticker(face: string): { url: string; aspect: number } {
   return result;
 }
 
-/** The face's features on a round-cornered cream head fitted round them, then trimmed. */
+/** Sticker linework (Gideon's reference): a medium navy outline, then a white die-cut border. */
+const OUTLINE = 8;
+const BORDER = 13;
+
+/** The face's features on a round cream body fitted round them, then trimmed. */
 function mochi(cut: HTMLCanvasElement): { url: string; aspect: number } {
   const data = cut.getContext("2d")!.getImageData(0, 0, cut.width, cut.height).data;
   let x0 = cut.width, y0 = cut.height, x1 = 0, y1 = 0;
@@ -101,39 +106,57 @@ function mochi(cut: HTMLCanvasElement): { url: string; aspect: number } {
         if (y < y0) y0 = y;
         if (y > y1) y1 = y;
       }
-  const pad = 14;
+  // An oval round the features: the box's half-sizes, scaled out so its corners fit.
+  const rx = ((x1 - x0 + 1) / 2) * 1.1 + 4;
+  const ry = ((y1 - y0 + 1) / 2) * 1.38 + 6;
+  const edge = OUTLINE + BORDER;
   const out = document.createElement("canvas");
-  out.width = x1 - x0 + 1 + (pad + 11) * 2;
-  out.height = y1 - y0 + 1 + (pad + 11) * 2;
+  out.width = Math.ceil((rx + edge) * 2);
+  out.height = Math.ceil((ry + edge) * 2);
   const g = out.getContext("2d")!;
-  const head = (grow: number, colour: string) => {
-    const w = x1 - x0 + 1 + (pad + grow) * 2;
-    const h = y1 - y0 + 1 + (pad + grow) * 2;
+  const cx = out.width / 2;
+  const cy = out.height / 2;
+  const oval = (grow: number, colour: string, dx = 0, dy = 0) => {
     g.fillStyle = colour;
     g.beginPath();
-    g.roundRect(11 - grow, 11 - grow, w, h, Math.min(w, h) * 0.42);
+    g.ellipse(cx + dx, cy + dy, rx + grow, ry + grow, 0, 0, Math.PI * 2);
     g.fill();
   };
-  head(11, palette.ink);
-  head(8, palette.cream);
-  head(0, palette.face);
-  g.drawImage(cut, -x0 + pad + 11, -y0 + pad + 11);
+  oval(edge, "#ffffff");
+  oval(OUTLINE, palette.line);
+  // The body: a warm shade along the bottom, under the cream lit from the top left.
+  g.save();
+  g.beginPath();
+  g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+  g.clip();
+  oval(0, mix(palette.face, palette.cheek, 0.22));
+  oval(0, palette.face, -rx * 0.06, -ry * 0.12);
+  // Gloss: a soft white streak top left, and a dot after it.
+  g.fillStyle = "#ffffff";
+  g.beginPath();
+  g.ellipse(cx - rx * 0.62, cy - ry * 0.52, rx * 0.12, ry * 0.07, -0.6, 0, Math.PI * 2);
+  g.fill();
+  g.beginPath();
+  g.arc(cx - rx * 0.42, cy - ry * 0.7, Math.max(2.5, ry * 0.04), 0, Math.PI * 2);
+  g.fill();
+  g.restore();
+  g.drawImage(cut, cx - (x0 + x1 + 1) / 2, cy - (y0 + y1 + 1) / 2);
   return { url: out.toDataURL("image/png"), aspect: out.width / out.height };
 }
 
 /**
  * Any drawing (on a transparent canvas, with room round it) as a die-cut sticker:
- * from the outside in, a thin ink edge, a cream die-cut border, a navy backing
- * that follows the silhouette, then the drawing. Trimmed to what's there.
+ * from the outside in, a white die-cut border, a navy outline (none for drawings
+ * that are navy already), then the drawing. Trimmed to what's there. Was a thick
+ * navy backing inside a cream border (Gideon, 21 Oct: too heavy).
  */
-function dieCut(cut: HTMLCanvasElement): { url: string; aspect: number } {
+function dieCut(cut: HTMLCanvasElement, outline = OUTLINE, border = BORDER): { url: string; aspect: number } {
   const sticker = document.createElement("canvas");
   sticker.width = cut.width;
   sticker.height = cut.height;
   const sg = sticker.getContext("2d")!;
-  sg.drawImage(grown(cut, 27, palette.ink), 0, 0);
-  sg.drawImage(grown(cut, 24, palette.cream), 0, 0);
-  sg.drawImage(grown(cut, 16, palette.ground), 0, 0);
+  sg.drawImage(grown(cut, outline + border, "#ffffff"), 0, 0);
+  if (outline > 0) sg.drawImage(grown(cut, outline, palette.line), 0, 0);
   sg.drawImage(cut, 0, 0);
   // Trim to what's there.
   const data = sg.getImageData(0, 0, sticker.width, sticker.height).data;
@@ -189,46 +212,58 @@ export function symbolSticker(kind: SymbolKind): { url: string; aspect: number }
   };
   switch (kind) {
     case "www":
+      // On a pale water-blue tag.
+      g.fillStyle = mix(palette.water, "#ffffff", 0.7);
+      g.beginPath();
+      g.roundRect(44, 52, 172, 90, 30);
+      g.fill();
       for (let i = 0; i < 3; i++) {
         const x0 = 62 + i * 48;
         const y0 = 82 - (i === 1 ? 10 : 0);
-        line([[x0, y0], [x0 + 10, y0 + 34], [x0 + 20, y0 + 12], [x0 + 30, y0 + 34], [x0 + 40, y0]], 8, palette.cream);
+        line([[x0, y0], [x0 + 10, y0 + 34], [x0 + 20, y0 + 12], [x0 + 30, y0 + 34], [x0 + 40, y0]], 8, palette.line);
       }
       break;
     case "magnifier":
-      g.fillStyle = palette.teal;
+      // As on the face: a water-blue rim and handle, a pale glass with a glint.
+      g.fillStyle = mix(palette.water, "#ffffff", 0.75);
       g.beginPath();
       g.arc(118, 88, 38, 0, Math.PI * 2);
       g.fill();
-      g.strokeStyle = palette.cream;
-      g.lineWidth = 9;
+      g.strokeStyle = palette.water;
+      g.lineWidth = 10;
       g.stroke();
-      line([[146, 116], [176, 146]], 14, palette.cream);
+      line([[148, 118], [178, 148]], 15, palette.water);
+      g.strokeStyle = "#ffffff";
       g.lineWidth = 6;
       g.beginPath();
       g.arc(118, 88, 24, Math.PI * 1.1, Math.PI * 1.45);
       g.stroke();
       break;
     case "sweat": {
-      g.fillStyle = palette.teal;
-      g.strokeStyle = palette.cream;
-      g.lineWidth = 6;
+      g.fillStyle = palette.water;
       g.beginPath();
       g.moveTo(130, 44);
       g.bezierCurveTo(150, 80, 168, 104, 168, 124);
       g.arc(130, 124, 38, 0, Math.PI);
       g.bezierCurveTo(92, 104, 110, 80, 130, 44);
       g.fill();
-      g.stroke();
-      g.fillStyle = palette.cream;
+      g.fillStyle = "#ffffff";
       g.beginPath();
       g.arc(116, 128, 9, 0, Math.PI * 2);
       g.fill();
       break;
     }
     case "dots":
+      // In a white thought bubble, its tail at the bottom left.
+      g.fillStyle = "#ffffff";
+      g.beginPath();
+      g.ellipse(130, 96, 92, 54, 0, 0, Math.PI * 2);
+      g.fill();
+      g.beginPath();
+      g.arc(62, 160, 13, 0, Math.PI * 2);
+      g.fill();
       for (let i = 0; i < 3; i++) {
-        g.fillStyle = palette.cream;
+        g.fillStyle = palette.line;
         g.beginPath();
         g.arc(86 + i * 44, 100, 15, 0, Math.PI * 2);
         g.fill();
@@ -242,28 +277,42 @@ export function symbolSticker(kind: SymbolKind): { url: string; aspect: number }
       ] as const)
         for (const side of [-1, 1]) {
           const x = cx + side * 20 * s;
-          g.fillStyle = palette.mustard;
+          // Each little face on its own small cream head.
+          if (side === -1) {
+            g.fillStyle = palette.face;
+            g.beginPath();
+            g.ellipse(cx, cy - 2 * s, 44 * s, 40 * s, 0, 0, Math.PI * 2);
+            g.fill();
+          }
+          // As on the face: navy eyes with a white shine, navy brows.
+          g.fillStyle = palette.line;
           g.beginPath();
           g.arc(x, cy, 16 * s, 0, Math.PI * 2);
           g.fill();
-          g.fillStyle = palette.ink;
+          g.fillStyle = "#ffffff";
           g.beginPath();
-          g.arc(x + 3 * s, cy - 2 * s, 7 * s, 0, Math.PI * 2);
+          g.arc(x - 4 * s, cy - 5 * s, 5.5 * s, 0, Math.PI * 2);
           g.fill();
-          line([[x - side * 10 * s, cy - 26 * s], [x + side * 10 * s, cy - 22 * s]], 5 * s, palette.cream);
+          line([[x - side * 10 * s, cy - 28 * s], [x + side * 10 * s, cy - 24 * s]], 5 * s, palette.line);
         }
       break;
     case "terminal":
-      g.fillStyle = palette.cream;
+      // On a little pale teal screen.
+      g.fillStyle = mix(palette.teal, "#ffffff", 0.72);
+      g.beginPath();
+      g.roundRect(46, 46, 168, 108, 24);
+      g.fill();
+      g.fillStyle = palette.line;
       g.font = "800 84px ui-monospace, Menlo, monospace";
       g.textAlign = "center";
       g.textBaseline = "middle";
       g.fillText(">_", 130, 100);
       break;
     case "sparkles":
+      // As on done's face: all three mustard.
       star(g, 108, 100, 46, palette.mustard);
-      star(g, 172, 62, 26, palette.cream);
-      star(g, 178, 138, 18, palette.cream);
+      star(g, 172, 62, 26, palette.mustard);
+      star(g, 178, 138, 18, palette.mustard);
       break;
     // Kinds of work beyond code (Work Report reference, 15 Oct). Each sits at a slight
     // tilt, like a sticker slapped on, and stays in Toki's five colours.
@@ -332,7 +381,9 @@ export function symbolSticker(kind: SymbolKind): { url: string; aspect: number }
       break;
     }
   }
-  const result = dieCut(c);
+  // Symbols are drawn big and shown small (about a third of a face's scale), so their
+  // linework is heavier to match the faces' on the page.
+  const result = dieCut(c, 9, 15);
   symbolCache.set(kind, result);
   return result;
 }
