@@ -8,7 +8,7 @@ export type EyeShape = "round" | "arc" | "line" | "sparkle" | "spiral" | "star" 
 export type Gaze = "still" | "scan" | "dart" | "scroll-up" | "look-around" | "follow-www";
 // Kawaii pass (21 Oct) adds: open (an open smile, coloured inside, with a tongue),
 // blep (a straight mouth with the tongue out), cat (ω) and shout (an open, cross mouth).
-export type MouthShape = "none" | "line" | "smile" | "o" | "pout" | "tongue" | "wobble" | "yawn" | "open" | "blep" | "cat" | "shout" | "hmm";
+export type MouthShape = "none" | "line" | "smile" | "o" | "pout" | "tongue" | "wobble" | "yawn" | "open" | "blep" | "cat" | "shout";
 export type ManpuKind = "dots" | "sweat" | "magnifier" | "www" | "sparkles" | "blush" | "zzz" | "question" | "wifi" | "wifiOn" | "tear"; // wifi*: setup only
 
 export type Brows = {
@@ -109,25 +109,26 @@ export const expressions = {
     blinkSoftness: 1.8,
     busy: false,
   }),
-  // Thinking is a good thing (Gideon, 21 Oct): a thoughtful "hmm", not a frown.
-  think: e({ pupil: { x: -0.55, y: -0.6 }, brows: { y: 3, angle: -13, tilt: 8 }, manpu: ["dots"], mouth: "hmm" }),
+  // Thinking is a good thing (face review, 21 Oct): a small smile, not a frown.
+  think: e({ pupil: { x: -0.55, y: -0.6 }, brows: { y: 3, angle: -13, tilt: 8 }, manpu: ["dots"], mouth: "smile" }),
   // Pass 3: read and run share the working face; only their eye loops differ,
   // in motion (scanning lines; following output up the screen).
   read: e({ ...WORKING, gaze: "scan" }),
-  search: e({ open: 0.75, squint: 0.35, pupilScale: 0.85, gaze: "dart", brows: { y: -3, angle: -10, tilt: 0 }, manpu: ["magnifier"], mouth: "line" }),
+  search: e({ open: 0.75, squint: 0.35, pupilScale: 0.85, gaze: "dart", brows: { y: -3, angle: -10, tilt: 0 }, manpu: ["magnifier"], mouth: "smile" }),
   // Kawaii pass: the tongue out, concentrating (the reference's tongue face); a
   // smile, the tongue out of one side (face review, 21 Oct).
   edit: e({ pupil: { x: 0.1, y: 0.35 }, brows: { y: -2, angle: 6, tilt: 0 }, mouth: "blep" }),
   // Tuned by Gideon (3 Oct): eyes up and slightly left, right brow raised.
-  run: e({ ...WORKING, pupil: { x: -0.2, y: -0.65 }, brows: { y: -1, angle: -9, tilt: 10 }, gaze: "scroll-up" }),
+  run: e({ ...WORKING, pupil: { x: -0.2, y: -0.65 }, brows: { y: -1, angle: -9, tilt: 10 }, gaze: "scroll-up", mouth: "smile" }),
   // Worried: brows up in the middle, the top lids a little lowered, a nervous mouth.
   test: e({ open: 0.85, pupil: { x: 0, y: 0.1 }, blinkRate: 0.45, brows: { y: 5, angle: 12, tilt: 0 }, manpu: ["sweat"], mouth: "wobble" }),
   // Eyes up and out to the corner, drifting left to right in time with the "www" wave.
-  web: e({ gaze: "follow-www", pupil: { x: 1, y: -1 }, brows: { y: 5, angle: 0, tilt: 10 }, manpu: ["www"], mouth: "o" }),
+  web: e({ gaze: "follow-www", pupil: { x: 1, y: -1 }, brows: { y: 5, angle: 0, tilt: 10 }, manpu: ["www"], mouth: "line" }),
   // Subagents: spawned mini eyes appear around the face, one per running subagent
   // (drawn by the minis layer, on any face but blocked). This pose shows while
   // Toki has nothing else to do but wait on them. Brows and mouth as before.
-  subagent: e({ pupilScale: 0.9, brows: { y: 5, angle: 4, tilt: 0 }, mouth: "o" }),
+  // Face review (21 Oct): eyes looking down a little, towards the minis.
+  subagent: e({ pupilScale: 0.9, pupil: { x: 0, y: 1.1 }, brows: { y: 5, angle: 4, tilt: 0 }, mouth: "o" }),
   working: e(WORKING),
   // The most different face, readable from across the desk: bigger, round,
   // wide-open eyes, raised brows, "…", slid up above the hint and buttons.
@@ -142,8 +143,8 @@ export const expressions = {
     pupilScale: 1.1,
     brows: { y: 4, angle: 8, tilt: 0 },
     manpu: ["dots"],
-    // No mouth (Gideon, 3 Oct): the eyes, brows and "…" carry the waiting.
-    mouth: "none",
+    // A small smile (face review, 21 Oct; was no mouth from 3 Oct).
+    mouth: "smile",
     blinkRate: 1.3,
     // Eyes centred at y 84: as high as the brows and "…" allow while staying
     // 12 px clear of the top edge (spec §7.3); the mouth stays clear of the hint.
@@ -184,7 +185,7 @@ export const expressions = {
     pupilScale: 1.1,
     brows: { y: 2, angle: 4, tilt: 14 },
     manpu: ["question"],
-    mouth: "none",
+    mouth: "smile", // face review, 21 Oct
     blinkRate: 1.3,
     // No buttons below, so the face sits lower than blocked's (Gideon, 3 Oct: "jammed at the top").
     slide: -2,

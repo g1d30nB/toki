@@ -119,13 +119,6 @@ void drawMouth(M5Canvas& g, const AnimatedFace& f, const Tokens& tk, uint32_t no
       // A small round "o", filled like the other open mouths (face review, 21 Oct).
       g.fillEllipse(ri(x), ri(y), ri(w * 0.42f), ri(w * 0.55f), kLine);
       return;
-    case Mouth::Hmm: {
-      // Thinking (a good thing): a short line turning up at one end.
-      const float R = w * 0.42f;
-      line(x - w * 0.62f, y, x + w * 0.2f, y, r, kLine);
-      arc(x + w * 0.2f, y - R, R, 90, 5);
-      return;
-    }
     case Mouth::Cat: {
       const float R = w * 0.38f;
       arc(x - R, y - R * 0.5f, R, 15, 165);

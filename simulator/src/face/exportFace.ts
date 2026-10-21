@@ -10,7 +10,7 @@ import { defaultTokens } from "./tokens";
 
 const SHAPES = ["round", "arc", "line", "sparkle", "spiral", "star", "sleep"] as const;
 const GAZES = ["still", "scan", "dart", "scroll-up", "look-around", "follow-www"] as const;
-const MOUTHS = ["none", "line", "smile", "o", "pout", "tongue", "wobble", "yawn", "open", "blep", "cat", "shout", "hmm"] as const;
+const MOUTHS = ["none", "line", "smile", "o", "pout", "tongue", "wobble", "yawn", "open", "blep", "cat", "shout"] as const;
 const MANPU: ManpuKind[] = ["dots", "sweat", "magnifier", "www", "sparkles", "blush", "zzz", "question", "wifi", "wifiOn", "tear"];
 
 const camel = (s: string) => s.replace(/-(\w)/g, (_, c: string) => c.toUpperCase());

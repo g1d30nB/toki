@@ -23,7 +23,7 @@ constexpr uint32_t kWater = 0x3fa2e2;
 
 enum class EyeShape : uint8_t { Round, Arc, Line, Sparkle, Spiral, Star, Sleep };
 enum class Gaze : uint8_t { Still, Scan, Dart, ScrollUp, LookAround, FollowWww };
-enum class Mouth : uint8_t { None, Line, Smile, O, Pout, Tongue, Wobble, Yawn, Open, Blep, Cat, Shout, Hmm };
+enum class Mouth : uint8_t { None, Line, Smile, O, Pout, Tongue, Wobble, Yawn, Open, Blep, Cat, Shout };
 
 // Manpu are a bitmask: an expression can show several.
 constexpr uint16_t Manpu_Dots = 1u << 0;
@@ -207,7 +207,7 @@ constexpr Tokens kTokens = {
   11.0f, // wwwH
   3.0f, // wwwGap
   1.75f, // wwwWeight
-  25.0f, // wwwAbove
+  31.0f, // wwwAbove
   5.0f, // wwwLift
   1500.0f, // wwwWaveMs
   500.0f, // wwwPauseMs
@@ -219,9 +219,9 @@ constexpr Tokens kTokens = {
   3000.0f, // zzzCycleMs
   7.0f, // zzzFirstUp
   2000.0f, // tearMs
-  11.5f, // sparkleLarge
-  8.0f, // sparkleMid
-  5.5f, // sparkleSmall
+  14.0f, // sparkleLarge
+  10.0f, // sparkleMid
+  7.0f, // sparkleSmall
   0.62f, // sparkleConcave
   1.2f, // sparkleTip
   13.0f, // sparkleX
@@ -271,7 +271,7 @@ constexpr Tokens kTokens = {
   2.6f, // mouthWeight
   0.0f, // mouthX
   1.0f, // tongueSide
-  157.0f, // hintY
+  161.0f, // hintY
   22.0f, // hintSize
   184.0f, // buttonY
   48.0f, // buttonH
@@ -370,12 +370,12 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* think */ {
-    EyeShape::Round, EyeShape::Round, 0, Mouth::Hmm,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::Smile,
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {-0.55f, -0.6f}, 1.0f, 1.0f,
     Gaze::Still,
     {3.0f, -13.0f, 8.0f, 1.0f, -1.0f},
-    Mouth::Hmm, 0.0f,
+    Mouth::Smile, 0.0f,
     Manpu_Dots,
     1.0f, 1.0f, true, 0.0f,
     1.0f, false, 0.0f,
@@ -392,12 +392,12 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* search */ {
-    EyeShape::Round, EyeShape::Round, 0, Mouth::Line,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::Smile,
     1.0f, 1.0f, 0.75f, 0.0f, 0.35f,
     {0.0f, 0.0f}, 0.85f, 1.0f,
     Gaze::Dart,
     {-3.0f, -10.0f, 0.0f, 1.0f, -1.0f},
-    Mouth::Line, 0.0f,
+    Mouth::Smile, 0.0f,
     Manpu_Magnifier,
     1.0f, 1.0f, true, 0.0f,
     1.0f, false, 0.0f,
@@ -414,12 +414,12 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* run */ {
-    EyeShape::Round, EyeShape::Round, 0, Mouth::Line,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::Smile,
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {-0.2f, -0.65f}, 1.0f, 1.0f,
     Gaze::ScrollUp,
     {-1.0f, -9.0f, 10.0f, 1.0f, -1.0f},
-    Mouth::Line, 0.0f,
+    Mouth::Smile, 0.0f,
     0,
     1.0f, 1.0f, true, 0.0f,
     1.0f, false, 0.0f,
@@ -436,12 +436,12 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* web */ {
-    EyeShape::Round, EyeShape::Round, 0, Mouth::O,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::Line,
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
     {1.0f, -1.0f}, 1.0f, 1.0f,
     Gaze::FollowWww,
     {5.0f, 0.0f, 10.0f, 1.0f, -1.0f},
-    Mouth::O, 0.0f,
+    Mouth::Line, 0.0f,
     Manpu_Www,
     1.0f, 1.0f, true, 0.0f,
     1.0f, false, 0.0f,
@@ -449,7 +449,7 @@ constexpr Expression kExpressions[] = {
   /* subagent */ {
     EyeShape::Round, EyeShape::Round, 0, Mouth::O,
     1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-    {0.0f, 0.0f}, 0.9f, 1.0f,
+    {0.0f, 1.1f}, 0.9f, 1.0f,
     Gaze::Still,
     {5.0f, 4.0f, 0.0f, 1.0f, -1.0f},
     Mouth::O, 0.0f,
@@ -469,12 +469,12 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* blocked */ {
-    EyeShape::Round, EyeShape::Round, 0, Mouth::None,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::Smile,
     1.18f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, -0.25f}, 1.1f, 1.2f,
     Gaze::Still,
     {4.0f, 8.0f, 0.0f, 1.0f, -1.0f},
-    Mouth::None, 0.0f,
+    Mouth::Smile, 0.0f,
     Manpu_Dots,
     1.3f, 1.0f, true, -22.0f,
     1.0f, false, 0.0f,
@@ -524,12 +524,12 @@ constexpr Expression kExpressions[] = {
     1.0f, false, 0.0f,
   },
   /* asked */ {
-    EyeShape::Round, EyeShape::Round, 0, Mouth::None,
+    EyeShape::Round, EyeShape::Round, 0, Mouth::Smile,
     1.12f, 1.0f, 1.0f, 0.0f, 0.0f,
     {0.0f, -0.25f}, 1.1f, 1.2f,
     Gaze::Still,
     {2.0f, 4.0f, 14.0f, 1.0f, -1.0f},
-    Mouth::None, 0.0f,
+    Mouth::Smile, 0.0f,
     Manpu_Question,
     1.3f, 1.0f, true, -2.0f,
     1.0f, false, 0.0f,

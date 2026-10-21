@@ -45,13 +45,6 @@ export function drawMouth(g: Gfx, f: AnimatedFace, tk: FaceTokens, now: number) 
       // A small round "o", filled like the other open mouths (face review, 21 Oct).
       g.fillEllipse(x, y, w * 0.42, w * 0.55, c);
       return;
-    case "hmm": {
-      // Thinking (a good thing): a short line turning up at one end.
-      const R = w * 0.42;
-      g.drawWideLine(x - w * 0.62, y, x + w * 0.2, y, r, c);
-      arc(x + w * 0.2, y - R, R, 90, 5);
-      return;
-    }
     case "cat": {
       // ω: two small smiles side by side.
       const R = w * 0.38;
