@@ -17,22 +17,8 @@ void wideLine(M5Canvas& g, float x0, float y0, float x1, float y1, float r, uint
   g.drawWideLine(ri(x0), ri(y0), ri(x1), ri(y1), r, c);
 }
 
-/** Where a straight line crosses the eye's ellipse, if it does. */
-bool chord(const Eye& e, float y0, float slope, float& u0, float& u1) {
-  const float A = e.rx, B = e.ry, d = y0 - e.cy;
-  const float a = 1 / (A * A) + (slope * slope) / (B * B);
-  const float b = (2 * d * slope) / (B * B);
-  const float c = (d * d) / (B * B) - 1;
-  const float disc = b * b - 4 * a * c;
-  if (disc <= 0) return false;
-  const float r = sqrtf(disc);
-  u0 = (-b - r) / (2 * a);
-  u1 = (-b + r) / (2 * a);
-  return true;
-}
-
-/** A lid: cover one side of a straight line with the screen, then draw the line across the eye. */
-void lid(M5Canvas& g, const Eye& e, const Tokens& tk, float y0, float slope, bool coverAbove) {
+/** A lid: cover one side of a straight line with the screen. */
+void lid(M5Canvas& g, const Eye& e, float y0, float slope, bool coverAbove) {
   const float left = e.cx - e.rx - 2, top = e.cy - e.ry - 2;
   const float w = (e.rx + 2) * 2, h = (e.ry + 2) * 2;
   auto yAt = [&](float x) { return y0 + slope * (x - e.cx); };
@@ -47,10 +33,8 @@ void lid(M5Canvas& g, const Eye& e, const Tokens& tk, float y0, float slope, boo
     g.fillTriangle(ri(left), ri(fmaxf(yl, yr)), ri(left + w), ri(fmaxf(yl, yr)), ri(yl > yr ? left + w : left), ri(fminf(yl, yr)), kFace);
   }
   g.clearClipRect();
-  float u0, u1;
-  if (!chord(e, y0, slope, u0, u1)) return;
-  const float x0 = e.cx + u0 - tk.lineWeight, x1 = e.cx + u1 + tk.lineWeight;
-  wideLine(g, x0, yAt(x0), x1, yAt(x1), tk.lineWeight, kLine);
+  // The flat cut is the lid: no line (Gideon, 21 Oct: on a solid eye it only showed
+  // where it poked out at the sides).
 }
 
 /**
@@ -152,9 +136,9 @@ void roundEye(M5Canvas& g, const Eye& base, const AnimatedFace& f, const Tokens&
 
   // Top lid: opens and closes, and slants down towards the nose for a scowl.
   if (open < 0.99f || fabsf(f.lidTilt) > 0.5f)
-    lid(g, e, tk, e.cy - e.ry + (1 - open) * e.ry * 2 * 0.6f, -e.side * tanf(f.lidTilt * PI / 180), true);
+    lid(g, e, e.cy - e.ry + (1 - open) * e.ry * 2 * 0.6f, -e.side * tanf(f.lidTilt * PI / 180), true);
   if (f.smile > 0.01f) smileLid(g, e, tk, f.smile);
-  if (f.squint > 0.01f) lid(g, e, tk, e.cy + e.ry - f.squint * e.ry, 0, false);
+  if (f.squint > 0.01f) lid(g, e, e.cy + e.ry - f.squint * e.ry, 0, false);
 }
 
 /** Draws an arc of a circle as one even line; degrees clockwise from the right (y down). */

@@ -11,22 +11,12 @@ import type { FaceTokens } from "./tokens";
 
 export type Eye = { cx: number; cy: number; rx: number; ry: number; side: -1 | 1 };
 
-/** Where a straight line crosses the eye's ellipse, if it does. */
-function chord(e: Eye, y0: number, slope: number): [number, number] | null {
-  const A = e.rx;
-  const B = e.ry;
-  const d = y0 - e.cy;
-  const a = 1 / (A * A) + (slope * slope) / (B * B);
-  const b = (2 * d * slope) / (B * B);
-  const c = (d * d) / (B * B) - 1;
-  const disc = b * b - 4 * a * c;
-  if (disc <= 0) return null;
-  const r = Math.sqrt(disc);
-  return [(-b - r) / (2 * a), (-b + r) / (2 * a)];
-}
-
-/** A lid: cover one side of a straight line with the screen, then draw the line across the eye. */
-function lid(g: Gfx, e: Eye, tk: FaceTokens, y0: number, slope: number, coverAbove: boolean) {
+/**
+ * A lid: cover one side of a straight line with the screen. The flat cut is the lid;
+ * no line is drawn (Gideon, 21 Oct: on a solid eye a line only shows where it pokes
+ * out at the sides, which breaks the eye's shape).
+ */
+function lid(g: Gfx, e: Eye, y0: number, slope: number, coverAbove: boolean) {
   const left = e.cx - e.rx - 2;
   const top = e.cy - e.ry - 2;
   const w = (e.rx + 2) * 2;
@@ -44,13 +34,6 @@ function lid(g: Gfx, e: Eye, tk: FaceTokens, y0: number, slope: number, coverAbo
     g.fillTriangle(left, Math.max(yl, yr), left + w, Math.max(yl, yr), yl > yr ? left + w : left, Math.min(yl, yr), palette.face);
   }
   g.clearClipRect();
-  // The lid's edge: a line across the eye, a little wider than it, as a drawn lid would be.
-  const ch = chord(e, y0, slope);
-  if (!ch) return;
-  const over = tk.lineWeight;
-  const x0 = e.cx + ch[0] - over;
-  const x1 = e.cx + ch[1] + over;
-  g.drawWideLine(x0, yAt(x0), x1, yAt(x1), tk.lineWeight, palette.line);
 }
 
 function roundEye(g: Gfx, base: Eye, f: AnimatedFace, tk: FaceTokens, sparkle: boolean) {
@@ -94,11 +77,11 @@ function roundEye(g: Gfx, base: Eye, f: AnimatedFace, tk: FaceTokens, sparkle: b
   // towards the nose for a scowl (lidTilt).
   if (open < 0.99 || Math.abs(f.lidTilt) > 0.5) {
     const y0 = e.cy - e.ry + (1 - open) * e.ry * 2 * 0.6;
-    lid(g, e, tk, y0, -e.side * Math.tan((f.lidTilt * Math.PI) / 180), true);
+    lid(g, e, y0, -e.side * Math.tan((f.lidTilt * Math.PI) / 180), true);
   }
   if (f.smile > 0.01) smileLid(g, e, tk, f.smile);
   // Lower lid: rises when squinting.
-  if (f.squint > 0.01) lid(g, e, tk, e.cy + e.ry - f.squint * e.ry, 0, false);
+  if (f.squint > 0.01) lid(g, e, e.cy + e.ry - f.squint * e.ry, 0, false);
 }
 
 /**
